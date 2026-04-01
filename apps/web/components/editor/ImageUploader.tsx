@@ -1,7 +1,6 @@
 'use client'
 import { useRef, useState } from 'react'
 import { useEditorStore } from '@/store/editorStore'
-import { UploadCloud, Image as ImageIcon, FileWarning } from 'lucide-react'
 
 export default function ImageUploader() {
   const inputRef = useRef<HTMLInputElement>(null)
@@ -10,8 +9,7 @@ export default function ImageUploader() {
 
   const handleFile = (file: File) => {
     if (!file.type.startsWith('image/')) return
-    const url = URL.createObjectURL(file)
-    setImage(url)
+    setImage(URL.createObjectURL(file))
   }
 
   const handleDrop = (e: React.DragEvent) => {
@@ -22,56 +20,37 @@ export default function ImageUploader() {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="group relative">
-        <div
-          onDrop={handleDrop}
-          onDragOver={(e) => {
-            e.preventDefault()
-            setIsDragging(true)
-          }}
-          onDragLeave={() => setIsDragging(false)}
-          onClick={() => inputRef.current?.click()}
-          className={`
-            relative cursor-pointer rounded-[2rem] border-2 border-dashed p-8 text-center transition-all duration-300
-            ${isDragging 
-              ? 'border-[#6C63FF] bg-[#6C63FF]/5 scale-[0.98]' 
-              : 'border-white/10 bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.04]'
-            }
-          `}
-        >
-          <div className="flex flex-col items-center">
-            <div className={`
-              mb-5 flex h-14 w-14 items-center justify-center rounded-2xl transition-all duration-300
-              ${isDragging ? 'bg-[#6C63FF] text-white' : 'bg-white/5 text-white/40'}
-            `}>
-              <UploadCloud className={`h-7 w-7 ${isDragging ? 'animate-bounce' : ''}`} />
-            </div>
-            
-            <p className="text-sm font-bold text-white/80 transition-colors group-hover:text-white">
+    <div className="space-y-3">
+      <div
+        onDrop={handleDrop}
+        onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
+        onDragLeave={() => setIsDragging(false)}
+        onClick={() => inputRef.current?.click()}
+        className={`relative cursor-pointer rounded-2xl border-2 border-dashed p-7 text-center transition-all duration-200 ${
+          isDragging
+            ? 'border-[#6C63FF] bg-[#6C63FF]/8 scale-[0.98]'
+            : 'border-white/10 hover:border-white/20 hover:bg-white/[0.02]'
+        }`}
+      >
+        <div className="flex flex-col items-center gap-3">
+          <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${isDragging ? 'bg-[#6C63FF] text-white' : 'bg-white/5 text-white/30'}`}>
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+            </svg>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-white/70">
               {isDragging ? 'Drop it here!' : 'Click or drag image'}
             </p>
-            <p className="mt-2 text-[10px] font-medium uppercase tracking-[0.2em] text-white/30">
-              PNG, JPG, WEBP (MAX 10MB)
-            </p>
+            <p className="text-[10px] uppercase tracking-widest text-white/25 mt-1">PNG · JPG · WEBP</p>
           </div>
-
-          {/* Decorative corners */}
-          <div className="absolute left-4 top-4 h-3 w-3 border-l-2 border-t-2 border-white/10 transition-colors group-hover:border-[#6C63FF]/30" />
-          <div className="absolute right-4 top-4 h-3 w-3 border-r-2 border-t-2 border-white/10 transition-colors group-hover:border-[#6C63FF]/30" />
-          <div className="absolute bottom-4 left-4 h-3 w-3 border-b-2 border-l-2 border-white/10 transition-colors group-hover:border-[#6C63FF]/30" />
-          <div className="absolute bottom-4 right-4 h-3 w-3 border-b-2 border-r-2 border-white/10 transition-colors group-hover:border-[#6C63FF]/30" />
         </div>
       </div>
 
-      <div className="flex items-center gap-3 px-2">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/5">
-          <ImageIcon className="h-4 w-4 text-white/30" />
-        </div>
-        <p className="text-[11px] leading-relaxed text-white/40">
-          Your files are processed in-browser. <span className="text-white/60">No data leaves your device.</span>
-        </p>
-      </div>
+      <p className="text-[11px] text-white/25 px-1 leading-relaxed">
+        Files are processed in-browser.{' '}
+        <span className="text-white/40">No data leaves your device.</span>
+      </p>
 
       <input
         ref={inputRef}

@@ -16,7 +16,7 @@ function useLoadedImage(src: string | null) {
 }
 
 export default function EditorCanvasClient() {
-  const { image, processedImage, filters } = useEditorStore()
+  const { image, processedImage, filters, setDimensions } = useEditorStore()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const originalImg = useLoadedImage(image)
@@ -37,6 +37,7 @@ export default function EditorCanvasClient() {
     ctx.filter = `brightness(${filters.brightness}%) contrast(${filters.contrast}%) saturate(${filters.saturation}%)`
     ctx.drawImage(activeImg, 0, 0)
     ctx.filter = 'none'
+    setDimensions({ w: activeImg.naturalWidth, h: activeImg.naturalHeight })
   }, [activeImg, filters])
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {

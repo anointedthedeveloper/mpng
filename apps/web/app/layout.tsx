@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import PageLoader from '@/components/PageLoader'
 
 const BASE_URL = 'https://mpng.vercel.app'
 
@@ -51,7 +52,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-[#060816] text-white antialiased">{children}</body>
+      <body className="min-h-screen bg-[#060816] text-white antialiased">
+        <PageLoader />
+        {children}
+      </body>
     </html>
   )
 }

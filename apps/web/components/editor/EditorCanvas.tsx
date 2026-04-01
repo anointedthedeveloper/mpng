@@ -4,8 +4,9 @@ import dynamic from 'next/dynamic'
 const EditorCanvasClient = dynamic(() => import('./EditorCanvasClient'), {
   ssr: false,
   loading: () => (
-    <div className="mpng-card checkerboard flex min-h-[480px] min-w-[720px] items-center justify-center text-sm text-white/55">
-      Loading canvas...
+    <div className="checkerboard flex items-center justify-center rounded-2xl border border-white/10"
+      style={{ width: 720, height: 480 }}>
+      <span className="text-sm text-white/30">Loading canvas…</span>
     </div>
   ),
 })

@@ -1,29 +1,51 @@
 'use client'
+import { useEffect, useRef, useState } from 'react'
 import { Stage, Layer, Image as KonvaImage } from 'react-konva'
-import useImage from 'use-image'
 import { useEditorStore } from '@/store/editorStore'
 
-function CanvasImage({ src, filters }: { src: string; filters: { brightness: number; contrast: number } }) {
-  const [image] = useImage(src, 'anonymous')
-  return (
-    <KonvaImage
-      image={image}
-      width={600}
-      height={450}
-      filters={[]}
-    />
-  )
+function useLoadedImage(src: string) {
+  const [image, setImage] = useState<HTMLImageElement | null>(null)
+  useEffect(() => {
+    const img = new window.Image()
+    img.crossOrigin = 'anonymous'
+    img.src = src
+    img.onload = () => setImage(img)
+    return () => { img.onload = null }
+  }, [src])
+  return image
 }
+
+const CANVAS_W = 720
+const CANVAS_H = 480
 
 export default function EditorCanvas() {
   const { image, processedImage, filters } = useEditorStore()
   const src = processedImage ?? image!
+  const loaded = useLoadedImage(src)
+
+  const scale = loaded
+    ? Math.min(CANVAS_W / loaded.naturalWidth, CANVAS_H / loaded.naturalHeight, 1)
+    : 1
+  const w = loaded ? loaded.naturalWidth * scale : CANVAS_W
+  const h = loaded ? loaded.naturalHeight * scale : CANVAS_H
+  const x = (CANVAS_W - w) / 2
+  const y = (CANVAS_H - h) / 2
 
   return (
-    <Stage width={600} height={450} className="rounded-xl overflow-hidden shadow-2xl">
-      <Layer>
-        <CanvasImage src={src} filters={filters} />
-      </Layer>
-    </Stage>
+    <div className="relative rounded-2xl overflow-hidden border border-gray-800 shadow-2xl bg-[#0d0d0d] checkerboard">
+      <Stage width={CANVAS_W} height={CANVAS_H}>
+        <Layer>
+          {loaded && (
+            <KonvaImage
+              image={loaded}
+              x={x}
+              y={y}
+              width={w}
+              height={h}
+            />
+          )}
+        </Layer>
+      </Stage>
+    </div>
   )
 }

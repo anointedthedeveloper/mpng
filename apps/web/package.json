@@ -8,20 +8,29 @@
     "start": "next start"
   },
   "dependencies": {
+    "axios": "^1.7.2",
+    "konva": "^9.3.6",
     "next": "14.2.3",
     "react": "^18",
     "react-dom": "^18",
-    "zustand": "^4.5.2",
-    "konva": "^9.3.6",
     "react-konva": "^18.2.10",
-    "axios": "^1.7.2"
+    "zustand": "^4.5.2"
   },
   "devDependencies": {
     "@types/node": "^20",
     "@types/react": "^18",
-    "typescript": "^5",
-    "tailwindcss": "^3.4.3",
+    "autoprefixer": "^10",
     "postcss": "^8",
-    "autoprefixer": "^10"
-  }
+    "tailwindcss": "^3.4.3",
+    "typescript": "^5"
+  },
+  "description": "",
+  "main": "next.config.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
 }

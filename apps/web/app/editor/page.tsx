@@ -1,4 +1,5 @@
 'use client'
+import { useEffect, useState } from 'react'
 import ImageUploader from '@/components/editor/ImageUploader'
 import EditorCanvas from '@/components/editor/EditorCanvas'
 import Toolbar from '@/components/editor/Toolbar'
@@ -6,12 +7,57 @@ import { useEditorStore } from '@/store/editorStore'
 import Link from 'next/link'
 
 export default function EditorPage() {
-  const { image, processedImage } = useEditorStore()
+  const { image, processedImage, setImage } = useEditorStore()
+  const [globalDrag, setGlobalDrag] = useState(false)
+
+  const handleFile = (file: File) => {
+    if (!file.type.startsWith('image/')) return
+    setImage(URL.createObjectURL(file))
+  }
+
+  // Global paste (Ctrl+V)
+  useEffect(() => {
+    const onPaste = (e: ClipboardEvent) => {
+      const item = Array.from(e.clipboardData?.items ?? []).find(i => i.type.startsWith('image/'))
+      if (!item) return
+      const file = item.getAsFile()
+      if (file) handleFile(file)
+    }
+    window.addEventListener('paste', onPaste)
+    return () => window.removeEventListener('paste', onPaste)
+  }, [])
+
+  // Global drop anywhere
+  const onDragOver = (e: React.DragEvent) => { e.preventDefault(); setGlobalDrag(true) }
+  const onDragLeave = (e: React.DragEvent) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setGlobalDrag(false) }
+  const onDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setGlobalDrag(false)
+    const file = e.dataTransfer.files[0]
+    if (file) handleFile(file)
+  }
 
   return (
-    <main className="min-h-screen bg-[#080810] text-white">
-      <div className="grid min-h-screen lg:grid-cols-[22rem_1fr]">
+    <main
+      className="min-h-screen bg-[#080810] text-white relative"
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={onDrop}
+    >
+      {/* Full-page drop overlay */}
+      {globalDrag && (
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-[#080810]/90 border-2 border-dashed border-[#6C63FF] rounded-none pointer-events-none">
+          <div className="w-20 h-20 rounded-3xl bg-[#6C63FF]/20 flex items-center justify-center mb-4">
+            <svg className="w-10 h-10 text-[#6C63FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+            </svg>
+          </div>
+          <p className="text-xl font-bold text-white">Drop image anywhere</p>
+          <p className="text-sm text-white/40 mt-1">PNG · JPG · WEBP</p>
+        </div>
+      )}
 
+      <div className="grid min-h-screen lg:grid-cols-[22rem_1fr]">
         {/* Sidebar */}
         <aside className="flex flex-col border-r border-white/8 bg-[#0a0a14]">
           <div className="flex items-center justify-between border-b border-white/8 px-6 py-5">
@@ -29,10 +75,7 @@ export default function EditorPage() {
                 </div>
               </div>
             </Link>
-            <Link
-              href="/"
-              className="w-8 h-8 flex items-center justify-center rounded-lg border border-white/10 text-white/40 hover:text-white hover:border-white/20 transition"
-            >
+            <Link href="/" className="w-8 h-8 flex items-center justify-center rounded-lg border border-white/10 text-white/40 hover:text-white hover:border-white/20 transition">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
@@ -42,7 +85,7 @@ export default function EditorPage() {
           <div className="flex-1 overflow-y-auto px-5 py-6 space-y-6">
             <div className="rounded-2xl border border-[#6C63FF]/20 bg-[#6C63FF]/5 p-4">
               <p className="text-xs text-white/60 leading-relaxed">
-                Drop in an image to start. Use AI tools to remove backgrounds or refine the canvas.
+                Drop anywhere, paste <kbd className="px-1 py-0.5 rounded bg-white/10 text-white/50 text-[10px]">Ctrl+V</kbd>, or click below to upload.
               </p>
             </div>
 
@@ -60,12 +103,8 @@ export default function EditorPage() {
           </div>
 
           <div className="border-t border-white/8 px-5 py-4 flex items-center justify-between">
-            <a
-              href="https://github.com/anointedthedeveloper/mpng"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 text-[11px] text-white/30 hover:text-white transition"
-            >
+            <a href="https://github.com/anointedthedeveloper/mpng" target="_blank" rel="noopener noreferrer"
+              className="flex items-center gap-2 text-[11px] text-white/30 hover:text-white transition">
               <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
               </svg>
@@ -79,11 +118,9 @@ export default function EditorPage() {
         <section className="flex flex-col bg-[#060810]">
           <header className="flex items-center justify-between border-b border-white/8 px-8 py-5">
             <div>
-              <h1 className="text-base font-bold text-white">
-                {image ? 'Active Session' : 'Ready to Start'}
-              </h1>
+              <h1 className="text-base font-bold text-white">{image ? 'Active Session' : 'Ready to Start'}</h1>
               <p className="text-xs text-white/30 mt-0.5">
-                {image ? 'Precision editing canvas' : 'Upload an image to unlock tools'}
+                {image ? 'Precision editing canvas' : 'Drop, paste, or upload an image'}
               </p>
             </div>
             {image && (
@@ -98,7 +135,7 @@ export default function EditorPage() {
             {image ? (
               <EditorCanvas />
             ) : (
-              <div className="text-center">
+              <div className="text-center pointer-events-none">
                 <div className="mx-auto w-20 h-20 rounded-3xl border border-white/10 bg-white/5 flex items-center justify-center mb-6">
                   <svg className="w-8 h-8 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -106,7 +143,7 @@ export default function EditorPage() {
                 </div>
                 <h2 className="text-lg font-bold text-white">Your canvas awaits</h2>
                 <p className="text-sm text-white/40 mt-2 max-w-xs mx-auto leading-relaxed">
-                  Upload an image from the sidebar to begin editing
+                  Drop anywhere · Paste <span className="text-white/60">Ctrl+V</span> · Or upload from sidebar
                 </p>
               </div>
             )}

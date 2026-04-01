@@ -2,13 +2,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { useEditorStore } from '@/store/editorStore'
 
-const CANVAS_W = 720
-const CANVAS_H = 480
-
 function useLoadedImage(src: string | null) {
   const [img, setImg] = useState<HTMLImageElement | null>(null)
   useEffect(() => {
-    if (!src) return setImg(null)
+    if (!src) { setImg(null); return }
     const el = new window.Image()
     el.crossOrigin = 'anonymous'
     el.src = src
@@ -18,41 +15,35 @@ function useLoadedImage(src: string | null) {
   return img
 }
 
-function drawImage(ctx: CanvasRenderingContext2D, img: HTMLImageElement, filters: { brightness: number; contrast: number; saturation: number }) {
-  ctx.clearRect(0, 0, CANVAS_W, CANVAS_H)
-  ctx.filter = `brightness(${filters.brightness}%) contrast(${filters.contrast}%) saturate(${filters.saturation}%)`
-  const scale = Math.min(CANVAS_W / img.naturalWidth, CANVAS_H / img.naturalHeight, 1)
-  const w = img.naturalWidth * scale
-  const h = img.naturalHeight * scale
-  ctx.drawImage(img, (CANVAS_W - w) / 2, (CANVAS_H - h) / 2, w, h)
-  ctx.filter = 'none'
-}
-
 export default function EditorCanvasClient() {
   const { image, processedImage, filters } = useEditorStore()
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
   const originalImg = useLoadedImage(image)
   const processedImg = useLoadedImage(processedImage)
   const activeImg = processedImg ?? originalImg
 
-  // before/after slider state
-  const [sliderX, setSliderX] = useState(CANVAS_W / 2)
+  const [sliderPct, setSliderPct] = useState(50)
   const [dragging, setDragging] = useState(false)
   const showBeforeAfter = !!(processedImage && originalImg && processedImg)
 
-  // draw main canvas
+  // Draw active image onto canvas at full resolution
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas || !activeImg) return
+    canvas.width = activeImg.naturalWidth
+    canvas.height = activeImg.naturalHeight
     const ctx = canvas.getContext('2d')!
-    drawImage(ctx, activeImg, filters)
+    ctx.filter = `brightness(${filters.brightness}%) contrast(${filters.contrast}%) saturate(${filters.saturation}%)`
+    ctx.drawImage(activeImg, 0, 0)
+    ctx.filter = 'none'
   }, [activeImg, filters])
 
-  // before/after mouse handlers
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!dragging) return
     const rect = e.currentTarget.getBoundingClientRect()
-    setSliderX(Math.max(0, Math.min(CANVAS_W, e.clientX - rect.left)))
+    const pct = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100))
+    setSliderPct(pct)
   }
 
   const download = () => {
@@ -66,57 +57,64 @@ export default function EditorCanvasClient() {
 
   if (!activeImg) return null
 
+  // Display size: fit within max bounds
+  const maxW = 860
+  const maxH = 580
+  const ratio = Math.min(maxW / activeImg.naturalWidth, maxH / activeImg.naturalHeight, 1)
+  const dispW = Math.round(activeImg.naturalWidth * ratio)
+  const dispH = Math.round(activeImg.naturalHeight * ratio)
+
   return (
     <div className="flex flex-col items-center gap-4">
-      {/* Canvas / Before-After */}
       <div
+        ref={containerRef}
         className="relative overflow-hidden rounded-2xl border border-white/10 shadow-2xl shadow-black/40 checkerboard select-none"
-        style={{ width: CANVAS_W, height: CANVAS_H }}
+        style={{ width: dispW, height: dispH }}
         onMouseMove={handleMouseMove}
         onMouseUp={() => setDragging(false)}
         onMouseLeave={() => setDragging(false)}
       >
-        {/* Main canvas (processed + filters) */}
-        <canvas ref={canvasRef} width={CANVAS_W} height={CANVAS_H} className="absolute inset-0" />
+        {/* Main canvas — full resolution, CSS-scaled to fit */}
+        <canvas
+          ref={canvasRef}
+          className="absolute inset-0 w-full h-full"
+          style={{ imageRendering: 'auto' }}
+        />
 
         {/* Before/after overlay */}
         {showBeforeAfter && (
           <>
-            {/* Original clipped to left of slider */}
+            {/* "Before" — original image clipped to left of slider */}
             <div
-              className="absolute inset-0 overflow-hidden pointer-events-none"
-              style={{ clipPath: `inset(0 ${CANVAS_W - sliderX}px 0 0)` }}
+              className="absolute inset-0 pointer-events-none overflow-hidden"
+              style={{ clipPath: `inset(0 ${100 - sliderPct}% 0 0)` }}
             >
-              <canvas
-                width={CANVAS_W}
-                height={CANVAS_H}
-                ref={(el) => {
-                  if (!el || !originalImg) return
-                  const ctx = el.getContext('2d')!
-                  drawImage(ctx, originalImg, { brightness: 100, contrast: 100, saturation: 100 })
-                }}
+              <img
+                src={image!}
+                className="absolute inset-0 w-full h-full object-contain"
+                alt="before"
               />
-              <div className="absolute top-2 left-2 rounded-md bg-black/60 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-white/70">
+              <span className="absolute top-2 left-2 rounded-md bg-black/60 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-white/80">
                 Before
-              </div>
+              </span>
             </div>
 
-            {/* After label */}
-            <div className="absolute top-2 right-2 rounded-md bg-black/60 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-white/70 pointer-events-none">
+            {/* "After" label */}
+            <span className="absolute top-2 right-2 rounded-md bg-black/60 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-white/80 pointer-events-none">
               After
-            </div>
+            </span>
 
-            {/* Divider line */}
+            {/* Divider */}
             <div
-              className="absolute top-0 bottom-0 w-px bg-white/60 pointer-events-none"
-              style={{ left: sliderX }}
+              className="absolute top-0 bottom-0 w-0.5 bg-white/80 pointer-events-none"
+              style={{ left: `${sliderPct}%` }}
             />
 
-            {/* Drag handle */}
+            {/* Handle */}
             <div
-              className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-white shadow-lg flex items-center justify-center cursor-ew-resize z-10"
-              style={{ left: sliderX }}
-              onMouseDown={() => setDragging(true)}
+              className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-white shadow-xl flex items-center justify-center cursor-ew-resize z-10"
+              style={{ left: `${sliderPct}%` }}
+              onMouseDown={(e) => { e.preventDefault(); setDragging(true) }}
             >
               <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l-4 3 4 3M16 9l4 3-4 3" />
@@ -126,16 +124,21 @@ export default function EditorCanvasClient() {
         )}
       </div>
 
-      {/* Download button */}
-      <button
-        onClick={download}
-        className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm font-semibold text-white/70 hover:bg-white/10 hover:text-white hover:border-white/20 transition"
-      >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-        </svg>
-        Download PNG
-      </button>
+      {/* Info + Download */}
+      <div className="flex items-center gap-4">
+        <span className="text-[11px] text-white/25">
+          {activeImg.naturalWidth} × {activeImg.naturalHeight}px
+        </span>
+        <button
+          onClick={download}
+          className="flex items-center gap-2 px-5 py-2 rounded-xl bg-white/5 border border-white/10 text-sm font-semibold text-white/70 hover:bg-white/10 hover:text-white hover:border-white/20 transition"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          Download PNG
+        </button>
+      </div>
     </div>
   )
 }

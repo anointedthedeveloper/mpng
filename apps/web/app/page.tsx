@@ -1,8 +1,30 @@
 import Link from 'next/link'
 
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'mpng',
+  url: 'https://mpng.vercel.app',
+  description:
+    'AI-powered image and video editing platform that runs in the browser. Background removal, filters, smart cropping, and video trimming.',
+  applicationCategory: 'MultimediaApplication',
+  operatingSystem: 'Web',
+  author: {
+    '@type': 'Person',
+    name: 'Anointed the Developer',
+    url: 'https://github.com/anointedthedeveloper',
+  },
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+}
+
 export default function Home() {
   return (
-    <main className="flex flex-col items-center justify-center min-h-screen gap-6 px-4">
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <main className="flex flex-col items-center justify-center min-h-screen gap-6 px-4">
       <div className="text-center">
         <h1 className="text-6xl font-bold tracking-tight">
           mp<span className="text-brand">ng</span>
@@ -18,8 +40,9 @@ export default function Home() {
           Open Editor
         </Link>
         <a
-          href="https://github.com/your-username/mpng"
+          href="https://github.com/anointedthedeveloper/mpng"
           target="_blank"
+          rel="noopener noreferrer"
           className="px-6 py-3 border border-gray-700 rounded-lg font-semibold hover:border-gray-500 transition"
         >
           GitHub
@@ -38,6 +61,19 @@ export default function Home() {
           </div>
         ))}
       </div>
-    </main>
+
+      <footer className="mt-16 text-gray-600 text-sm">
+        Built by{' '}
+        <a
+          href="https://github.com/anointedthedeveloper"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-gray-400 hover:text-white transition"
+        >
+          anointedthedeveloper
+        </a>
+      </footer>
+      </main>
+    </>
   )
 }

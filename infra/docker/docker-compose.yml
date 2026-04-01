@@ -1,0 +1,42 @@
+version: '3.9'
+
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - '6379:6379'
+
+  ai-service:
+    build: ../../services/ai-service
+    ports:
+      - '8000:8000'
+    environment:
+      - PORT=8000
+
+  media-service:
+    build: ../../services/media-service
+    ports:
+      - '8001:8001'
+    environment:
+      - PORT=8001
+      - S3_BUCKET=${S3_BUCKET}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_DEFAULT_REGION=${AWS_REGION}
+
+  api:
+    build: ../../apps/api
+    ports:
+      - '3001:3001'
+    depends_on:
+      - redis
+      - ai-service
+      - media-service
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - AI_SERVICE_URL=http://ai-service:8000
+      - MEDIA_SERVICE_URL=http://media-service:8001
+      - S3_BUCKET=${S3_BUCKET}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${AWS_REGION}

@@ -59,6 +59,52 @@ export async function blurBackground(originalSrc: string, blurAmount: number): P
   })
 }
 
+// Add solid or gradient color background behind subject
+export async function addColorBackground(
+  originalSrc: string,
+  color: string,          // hex or 'gradient'
+  gradientTo?: string     // second color for gradient
+): Promise<string> {
+  return new Promise((resolve, reject) => {
+    fetch(originalSrc)
+      .then(r => r.blob())
+      .then(async (blob) => {
+        const maskedUrl = await removeBackground(new File([blob], 'image.png', { type: 'image/png' }))
+        const masked = new window.Image()
+        masked.onload = () => {
+          const w = masked.naturalWidth
+          const h = masked.naturalHeight
+          const canvas = document.createElement('canvas')
+          canvas.width = w
+          canvas.height = h
+          const ctx = canvas.getContext('2d')!
+
+          // Layer 1: color/gradient background
+          if (gradientTo) {
+            const grad = ctx.createLinearGradient(0, 0, w, h)
+            grad.addColorStop(0, color)
+            grad.addColorStop(1, gradientTo)
+            ctx.fillStyle = grad
+          } else {
+            ctx.fillStyle = color
+          }
+          ctx.fillRect(0, 0, w, h)
+
+          // Layer 2: subject on top
+          ctx.drawImage(masked, 0, 0, w, h)
+
+          canvas.toBlob((b) => {
+            if (!b) return reject(new Error('Color background failed'))
+            resolve(URL.createObjectURL(b))
+          }, 'image/png')
+        }
+        masked.onerror = () => reject(new Error('Failed to load masked image'))
+        masked.src = maskedUrl
+      })
+      .catch(reject)
+  })
+}
+
 export async function upscaleImage(src: string, scale: 2 | 4): Promise<string> {
   return new Promise((resolve, reject) => {
     const img = new window.Image()

@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { useEditorStore } from '@/store/editorStore'
-import { removeBackground, blurBackground, upscaleImage } from '@/lib/api'
+import { removeBackground, blurBackground, addColorBackground, upscaleImage } from '@/lib/api'
 
 function Slider({ label, value, min = 0, max = 200, onChange }: { label: string; value: number; min?: number; max?: number; onChange: (v: number) => void }) {
   const pct = Math.round(((value - min) / (max - min)) * 100)
@@ -26,12 +26,16 @@ export default function Toolbar() {
   const [bgLoading, setBgLoading] = useState(false)
   const [blurLoading, setBlurLoading] = useState(false)
   const [blurAmount, setBlurAmount] = useState(10)
+  const [bgColor, setBgColor] = useState('#6C63FF')
+  const [bgGradientTo, setBgGradientTo] = useState('#a09cf7')
+  const [useGradient, setUseGradient] = useState(false)
+  const [colorBgLoading, setColorBgLoading] = useState(false)
   const [upscaleLoading, setUpscaleLoading] = useState<2 | 4 | null>(null)
   const [upscaleDone, setUpscaleDone] = useState<{ from: string; to: string } | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const activeSrc = processedImage ?? image
-  const busy = bgLoading || blurLoading || upscaleLoading !== null
+  const busy = bgLoading || blurLoading || colorBgLoading || upscaleLoading !== null
 
   const handleRemoveBg = async () => {
     if (!activeSrc) return
@@ -54,6 +58,20 @@ export default function Toolbar() {
       setProcessedImage(url)
     } catch (e: any) { setError(e.message) }
     finally { setBlurLoading(false) }
+  }
+
+  const handleColorBg = async () => {
+    if (!image) return
+    setColorBgLoading(true); setError(null); setUpscaleDone(null)
+    try {
+      const url = await addColorBackground(
+        image,
+        bgColor,
+        useGradient ? bgGradientTo : undefined
+      )
+      setProcessedImage(url)
+    } catch (e: any) { setError(e.message) }
+    finally { setColorBgLoading(false) }
   }
 
   const handleUpscale = async (scale: 2 | 4) => {
@@ -122,6 +140,87 @@ export default function Toolbar() {
         {processedImage && (
           <p className="text-[10px] text-white/25 px-1 text-center">← drag slider on canvas to compare</p>
         )}
+      </div>
+
+      {/* Color Background */}
+      <div className="flex flex-col gap-2">
+        <p className="text-[10px] uppercase tracking-widest text-white/30 px-1">Color Background</p>
+
+        <div className="flex flex-col gap-3 rounded-xl border border-white/8 bg-white/[0.02] p-3">
+
+          {/* Preset swatches */}
+          <div className="flex flex-wrap gap-2">
+            {['#ffffff','#000000','#6C63FF','#ef4444','#f97316','#eab308','#22c55e','#3b82f6','#ec4899','#8b5cf6'].map((c) => (
+              <button
+                key={c}
+                onClick={() => { setBgColor(c); setUseGradient(false) }}
+                className={`w-7 h-7 rounded-lg border-2 transition ${
+                  bgColor === c && !useGradient ? 'border-white scale-110' : 'border-transparent hover:scale-105'
+                }`}
+                style={{ background: c }}
+              />
+            ))}
+            {/* Gradient preset */}
+            <button
+              onClick={() => setUseGradient(true)}
+              className={`w-7 h-7 rounded-lg border-2 transition ${
+                useGradient ? 'border-white scale-110' : 'border-transparent hover:scale-105'
+              }`}
+              style={{ background: 'linear-gradient(135deg, #6C63FF, #ec4899)' }}
+            />
+          </div>
+
+          {/* Custom color pickers */}
+          <div className="flex gap-2">
+            <label className="flex-1 flex flex-col gap-1">
+              <span className="text-[10px] text-white/30">{useGradient ? 'From' : 'Custom'}</span>
+              <div className="relative h-8 rounded-lg overflow-hidden border border-white/10">
+                <input
+                  type="color"
+                  value={bgColor}
+                  onChange={(e) => setBgColor(e.target.value)}
+                  className="absolute inset-0 w-full h-full cursor-pointer opacity-0"
+                />
+                <div className="absolute inset-0 rounded-lg" style={{ background: bgColor }} />
+                <span className="absolute inset-0 flex items-center justify-center text-[10px] font-mono text-white/60 mix-blend-difference">{bgColor}</span>
+              </div>
+            </label>
+
+            {useGradient && (
+              <label className="flex-1 flex flex-col gap-1">
+                <span className="text-[10px] text-white/30">To</span>
+                <div className="relative h-8 rounded-lg overflow-hidden border border-white/10">
+                  <input
+                    type="color"
+                    value={bgGradientTo}
+                    onChange={(e) => setBgGradientTo(e.target.value)}
+                    className="absolute inset-0 w-full h-full cursor-pointer opacity-0"
+                  />
+                  <div className="absolute inset-0 rounded-lg" style={{ background: bgGradientTo }} />
+                  <span className="absolute inset-0 flex items-center justify-center text-[10px] font-mono text-white/60 mix-blend-difference">{bgGradientTo}</span>
+                </div>
+              </label>
+            )}
+          </div>
+
+          {/* Preview strip */}
+          <div
+            className="h-6 rounded-lg border border-white/10"
+            style={{
+              background: useGradient
+                ? `linear-gradient(135deg, ${bgColor}, ${bgGradientTo})`
+                : bgColor
+            }}
+          />
+
+          <button
+            onClick={handleColorBg}
+            disabled={busy}
+            className="w-full h-9 flex items-center justify-center gap-2 rounded-lg border border-[#6C63FF]/30 bg-[#6C63FF]/10 text-xs font-semibold text-[#8c84ff] hover:bg-[#6C63FF]/20 disabled:opacity-40 transition"
+          >
+            {colorBgLoading ? <><Spinner />Applying…</> : <>Apply Background</>}
+          </button>
+        </div>
       </div>
 
       {/* Upscale */}

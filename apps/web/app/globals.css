@@ -8,61 +8,78 @@
   }
 
   body {
-    @apply bg-[#060816] text-white;
-    background-image:
-      radial-gradient(circle at top left, rgba(108, 99, 255, 0.18), transparent 30%),
-      radial-gradient(circle at top right, rgba(14, 165, 233, 0.12), transparent 28%),
-      linear-gradient(180deg, #0b1021 0%, #060816 55%, #04050b 100%);
-  }
-
-  ::selection {
-    background: rgba(108, 99, 255, 0.35);
-    color: #fff;
+    @apply bg-[#060816] text-white selection:bg-[#6C63FF]/30 selection:text-white;
+    background-image: 
+      radial-gradient(circle at 0% 0%, rgba(108, 99, 255, 0.15) 0%, transparent 50%),
+      radial-gradient(circle at 100% 0%, rgba(14, 165, 233, 0.1) 0%, transparent 50%),
+      linear-gradient(180deg, #0b1021 0%, #060816 100%);
+    background-attachment: fixed;
   }
 }
 
 @layer components {
   .mpng-shell {
-    @apply relative overflow-hidden;
+    @apply relative overflow-hidden antialiased;
   }
 
   .mpng-panel {
-    @apply rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-2xl shadow-black/30;
+    @apply rounded-[2.5rem] border border-white/10 bg-white/[0.02] backdrop-blur-3xl shadow-2xl shadow-black/40;
   }
 
   .mpng-label {
-    @apply text-[11px] uppercase tracking-[0.3em] text-white/45;
-  }
-
-  .mpng-btn {
-    @apply inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold transition;
+    @apply text-[10px] font-bold uppercase tracking-[0.3em] text-white/40;
   }
 
   .mpng-btn-primary {
-    @apply inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold transition bg-[#6C63FF] text-white shadow-lg shadow-[#6C63FF]/25 hover:-translate-y-0.5 hover:bg-[#7b75ff];
+    @apply inline-flex items-center justify-center rounded-2xl bg-[#6C63FF] text-sm font-bold text-white shadow-xl shadow-[#6C63FF]/20 transition-all duration-300 hover:-translate-y-1 hover:bg-[#7b75ff] hover:shadow-[#6C63FF]/40 active:scale-95 disabled:opacity-50 disabled:pointer-events-none;
   }
 
   .mpng-btn-secondary {
-    @apply inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold transition border border-white/10 bg-white/5 text-white/80 hover:border-white/20 hover:bg-white/10;
+    @apply inline-flex items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-sm font-bold text-white/80 transition-all duration-300 hover:border-white/20 hover:bg-white/10 hover:text-white active:scale-95;
   }
 
   .mpng-card {
-    @apply rounded-3xl border border-white/10 bg-white/5 p-6 shadow-xl shadow-black/20 backdrop-blur-xl;
+    @apply rounded-3xl border border-white/10 bg-white/[0.03] p-6 shadow-xl shadow-black/20 backdrop-blur-md transition-all duration-300;
   }
 
   .mpng-input-range {
-    @apply h-1 w-full cursor-pointer appearance-none rounded-full bg-white/10 accent-[#6C63FF];
+    @apply h-1.5 w-full cursor-pointer appearance-none rounded-full bg-white/10 accent-[#6C63FF] transition-all hover:bg-white/15;
+  }
+
+  .mpng-scrollbar::-webkit-scrollbar {
+    @apply w-1.5;
+  }
+
+  .mpng-scrollbar::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  .mpng-scrollbar::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-white/10 hover:bg-white/20;
   }
 }
 
 @layer utilities {
   .checkerboard {
-    background-image:
-      linear-gradient(45deg, #1d2233 25%, transparent 25%),
-      linear-gradient(-45deg, #1d2233 25%, transparent 25%),
-      linear-gradient(45deg, transparent 75%, #1d2233 75%),
-      linear-gradient(-45deg, transparent 75%, #1d2233 75%);
-    background-size: 16px 16px;
-    background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+    background-image: 
+      linear-gradient(45deg, #121526 25%, transparent 25%), 
+      linear-gradient(-45deg, #121526 25%, transparent 25%), 
+      linear-gradient(45deg, transparent 75%, #121526 75%), 
+      linear-gradient(-45deg, transparent 75%, #121526 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+  }
+
+  .glass-reflection {
+    @apply relative overflow-hidden;
+  }
+
+  .glass-reflection::after {
+    content: '';
+    @apply absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent opacity-0 transition-opacity duration-500 pointer-events-none;
+  }
+
+  .glass-reflection:hover::after {
+    @apply opacity-100;
   }
 }

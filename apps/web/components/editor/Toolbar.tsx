@@ -2,11 +2,24 @@
 import { useState } from 'react'
 import { useEditorStore } from '@/store/editorStore'
 import { removeBackground } from '@/lib/api'
+import { 
+  Eraser, 
+  Sun, 
+  Contrast, 
+  Activity, 
+  Undo2, 
+  RotateCcw,
+  Sparkles,
+  Loader2
+} from 'lucide-react'
 
-function Section({ label, children }: { label: string; children: React.ReactNode }) {
+function Section({ label, icon: Icon, children }: { label: string; icon?: any; children: React.ReactNode }) {
   return (
-    <div className="space-y-3">
-      <p className="mpng-label">{label}</p>
+    <div className="space-y-4">
+      <div className="flex items-center gap-2 px-1">
+        {Icon && <Icon className="h-3.5 w-3.5 text-white/30" />}
+        <p className="mpng-label">{label}</p>
+      </div>
       {children}
     </div>
   )
@@ -14,18 +27,23 @@ function Section({ label, children }: { label: string; children: React.ReactNode
 
 function Slider({
   label,
+  icon: Icon,
   value,
   onChange,
 }: {
   label: string
+  icon: any
   value: number
   onChange: (v: number) => void
 }) {
   return (
-    <label className="flex flex-col gap-1">
-      <div className="flex justify-between text-xs text-white/60">
-        <span className="capitalize">{label}</span>
-        <span>{value}</span>
+    <label className="group flex flex-col gap-2 rounded-2xl border border-white/5 bg-white/[0.02] p-3 transition-colors hover:border-white/10 hover:bg-white/[0.04]">
+      <div className="flex justify-between items-center px-1">
+        <div className="flex items-center gap-2">
+          <Icon className="h-3.5 w-3.5 text-white/40 group-hover:text-white/70 transition-colors" />
+          <span className="text-xs font-medium capitalize text-white/60 group-hover:text-white/80">{label}</span>
+        </div>
+        <span className="text-[10px] font-mono font-bold text-white/30 group-hover:text-[#8c84ff]">{value}</span>
       </div>
       <input
         type="range"
@@ -57,45 +75,62 @@ export default function Toolbar() {
     }
   }
 
+  const filterIcons = {
+    brightness: Sun,
+    contrast: Contrast,
+    saturation: Activity,
+  }
+
   return (
-    <div className="flex flex-col gap-5">
-      <Section label="AI Tools">
+    <div className="flex flex-col gap-8">
+      <Section label="AI Intelligence" icon={Sparkles}>
         <button
           onClick={handleRemoveBg}
           disabled={loading}
-          className="mpng-btn-primary w-full disabled:cursor-not-allowed disabled:opacity-50"
+          className="mpng-btn-primary group w-full gap-2.5 h-12 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loading ? (
             <>
-              <span className="h-3 w-3 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-              Processing...
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span className="text-sm">Analyzing Pixels...</span>
             </>
           ) : (
-            'Remove Background'
+            <>
+              <Eraser className="h-4 w-4 transition-transform group-hover:rotate-12" />
+              <span className="text-sm">Remove Background</span>
+            </>
           )}
         </button>
       </Section>
 
-      <Section label="Adjustments">
-        <div className="flex flex-col gap-3">
+      <Section label="Visual Tuning">
+        <div className="flex flex-col gap-2.5">
           {(['brightness', 'contrast', 'saturation'] as const).map((key) => (
-            <Slider key={key} label={key} value={filters[key]} onChange={(v) => updateFilter(key, v)} />
+            <Slider 
+              key={key} 
+              label={key} 
+              icon={filterIcons[key]}
+              value={filters[key]} 
+              onChange={(v) => updateFilter(key, v)} 
+            />
           ))}
         </div>
       </Section>
 
-      <Section label="History">
-        <div className="flex gap-2">
+      <Section label="History Management">
+        <div className="flex gap-3">
           <button
             onClick={undo}
-            className="mpng-btn-secondary flex-1"
+            className="mpng-btn-secondary group flex-1 gap-2 h-11"
           >
-            Undo
+            <Undo2 className="h-3.5 w-3.5 transition-transform group-hover:-translate-x-0.5" />
+            <span className="text-xs">Undo</span>
           </button>
           <button
             onClick={reset}
-            className="flex-1 rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-2.5 text-sm font-semibold text-rose-200 transition hover:border-rose-400/30 hover:bg-rose-500/15"
+            className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-rose-500/20 bg-rose-500/5 px-4 h-11 text-xs font-bold text-rose-300 transition-all hover:border-rose-500/40 hover:bg-rose-500/10 active:scale-95"
           >
+            <RotateCcw className="h-3.5 w-3.5" />
             Reset
           </button>
         </div>

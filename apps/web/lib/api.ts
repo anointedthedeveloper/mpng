@@ -9,14 +9,60 @@ export async function removeBackground(file: File): Promise<string> {
   return URL.createObjectURL(await res.blob())
 }
 
+// Blur background: uses remove.bg mask to isolate subject, blurs original behind it
+export async function blurBackground(originalSrc: string, blurAmount: number): Promise<string> {
+  return new Promise((resolve, reject) => {
+    // Step 1: get the remove.bg masked version (subject only, transparent bg)
+    fetch(originalSrc)
+      .then(r => r.blob())
+      .then(async (blob) => {
+        const maskedUrl = await removeBackground(new File([blob], 'image.png', { type: 'image/png' }))
+
+        const original = new window.Image()
+        const masked = new window.Image()
+        let loaded = 0
+
+        const onLoad = () => {
+          loaded++
+          if (loaded < 2) return
+
+          const w = original.naturalWidth
+          const h = original.naturalHeight
+          const canvas = document.createElement('canvas')
+          canvas.width = w
+          canvas.height = h
+          const ctx = canvas.getContext('2d')!
+
+          // Layer 1: blurred original as background
+          ctx.filter = `blur(${blurAmount}px)`
+          ctx.drawImage(original, 0, 0, w, h)
+          ctx.filter = 'none'
+
+          // Layer 2: sharp subject on top
+          ctx.drawImage(masked, 0, 0, w, h)
+
+          canvas.toBlob((b) => {
+            if (!b) return reject(new Error('Blur failed'))
+            resolve(URL.createObjectURL(b))
+          }, 'image/png')
+        }
+
+        original.onload = onLoad
+        original.onerror = () => reject(new Error('Failed to load original'))
+        original.src = originalSrc
+
+        masked.onload = onLoad
+        masked.onerror = () => reject(new Error('Failed to load masked image'))
+        masked.src = maskedUrl
+      })
+      .catch(reject)
+  })
+}
+
 export async function upscaleImage(src: string, scale: 2 | 4): Promise<string> {
   return new Promise((resolve, reject) => {
     const img = new window.Image()
     img.onload = () => {
-      const targetW = img.naturalWidth * scale
-      const targetH = img.naturalHeight * scale
-
-      // Stepped upscaling: double size in passes to preserve sharpness
       const steps = scale === 4 ? 2 : 1
       let currentCanvas = document.createElement('canvas')
       let currentCtx = currentCanvas.getContext('2d')!
@@ -32,23 +78,11 @@ export async function upscaleImage(src: string, scale: 2 | 4): Promise<string> {
         nextCtx.imageSmoothingEnabled = true
         nextCtx.imageSmoothingQuality = 'high'
         nextCtx.drawImage(currentCanvas, 0, 0, nextCanvas.width, nextCanvas.height)
-
-        // Unsharp mask: draw blurred copy subtracted from original to sharpen edges
-        const blurCanvas = document.createElement('canvas')
-        blurCanvas.width = nextCanvas.width
-        blurCanvas.height = nextCanvas.height
-        const blurCtx = blurCanvas.getContext('2d')!
-        blurCtx.filter = 'blur(1px)'
-        blurCtx.drawImage(nextCanvas, 0, 0)
-        blurCtx.filter = 'none'
-
-        // Overlay sharpened result: original + (original - blur) * strength
         nextCtx.globalCompositeOperation = 'overlay'
         nextCtx.globalAlpha = 0.25
         nextCtx.drawImage(nextCanvas, 0, 0)
         nextCtx.globalCompositeOperation = 'source-over'
         nextCtx.globalAlpha = 1
-
         currentCanvas = nextCanvas
       }
 

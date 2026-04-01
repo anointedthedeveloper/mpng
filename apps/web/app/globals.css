@@ -2,13 +2,66 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-[#060816] text-white;
+    background-image:
+      radial-gradient(circle at top left, rgba(108, 99, 255, 0.18), transparent 30%),
+      radial-gradient(circle at top right, rgba(14, 165, 233, 0.12), transparent 28%),
+      linear-gradient(180deg, #0b1021 0%, #060816 55%, #04050b 100%);
+  }
+
+  ::selection {
+    background: rgba(108, 99, 255, 0.35);
+    color: #fff;
+  }
+}
+
+@layer components {
+  .mpng-shell {
+    @apply relative overflow-hidden;
+  }
+
+  .mpng-panel {
+    @apply rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-2xl shadow-black/30;
+  }
+
+  .mpng-label {
+    @apply text-[11px] uppercase tracking-[0.3em] text-white/45;
+  }
+
+  .mpng-btn {
+    @apply inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold transition;
+  }
+
+  .mpng-btn-primary {
+    @apply inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold transition bg-[#6C63FF] text-white shadow-lg shadow-[#6C63FF]/25 hover:-translate-y-0.5 hover:bg-[#7b75ff];
+  }
+
+  .mpng-btn-secondary {
+    @apply inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold transition border border-white/10 bg-white/5 text-white/80 hover:border-white/20 hover:bg-white/10;
+  }
+
+  .mpng-card {
+    @apply rounded-3xl border border-white/10 bg-white/5 p-6 shadow-xl shadow-black/20 backdrop-blur-xl;
+  }
+
+  .mpng-input-range {
+    @apply h-1 w-full cursor-pointer appearance-none rounded-full bg-white/10 accent-[#6C63FF];
+  }
+}
+
 @layer utilities {
   .checkerboard {
     background-image:
-      linear-gradient(45deg, #1a1a1a 25%, transparent 25%),
-      linear-gradient(-45deg, #1a1a1a 25%, transparent 25%),
-      linear-gradient(45deg, transparent 75%, #1a1a1a 75%),
-      linear-gradient(-45deg, transparent 75%, #1a1a1a 75%);
+      linear-gradient(45deg, #1d2233 25%, transparent 25%),
+      linear-gradient(-45deg, #1d2233 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #1d2233 75%),
+      linear-gradient(-45deg, transparent 75%, #1d2233 75%);
     background-size: 16px 16px;
     background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
   }

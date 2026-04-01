@@ -18,18 +18,21 @@ export default function ImageUploader() {
   }
 
   return (
-    <div>
-      <p className="text-[11px] uppercase tracking-widest text-gray-600 mb-2">Upload</p>
+    <div className="space-y-3">
+      <div>
+        <p className="mpng-label">Upload</p>
+        <p className="mt-2 text-sm text-white/60">PNG, JPG, or WEBP files work best.</p>
+      </div>
       <div
         onDrop={handleDrop}
         onDragOver={(e) => e.preventDefault()}
         onClick={() => inputRef.current?.click()}
-        className="border-2 border-dashed border-gray-800 hover:border-[#6C63FF] rounded-xl p-5 text-center cursor-pointer transition group"
+        className="group cursor-pointer rounded-2xl border border-dashed border-white/15 bg-white/[0.03] p-6 text-center transition hover:border-[#6C63FF]/70 hover:bg-white/[0.06]"
       >
-        <p className="text-gray-600 text-xs group-hover:text-gray-400 transition">
-          Drop image here or <span className="text-[#6C63FF]">browse</span>
+        <p className="text-sm text-white/65 transition group-hover:text-white/80">
+          Drop an image here or <span className="text-[#9a95ff]">browse</span>
         </p>
-        <p className="text-gray-700 text-[10px] mt-1">PNG, JPG, WEBP</p>
+        <p className="mt-2 text-xs tracking-[0.18em] text-white/35">DRAG AND DROP SUPPORTED</p>
       </div>
       <input
         ref={inputRef}

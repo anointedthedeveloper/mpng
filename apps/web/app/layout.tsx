@@ -6,11 +6,11 @@ const BASE_URL = 'https://mpng.vercel.app'
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
   title: {
-    default: 'mpng — AI-powered media editing in the browser',
+    default: 'mpng - AI-powered media editing in the browser',
     template: '%s | mpng',
   },
   description:
-    'mpng is an AI-powered image and video editing platform that runs in the browser. Background removal, filters, smart cropping, and video trimming — all in one tool.',
+    'mpng is an AI-powered image and video editing platform that runs in the browser. Background removal, filters, smart cropping, and video trimming - all in one tool.',
   keywords: [
     'AI image editor',
     'background removal',
@@ -28,15 +28,15 @@ export const metadata: Metadata = {
     type: 'website',
     url: BASE_URL,
     siteName: 'mpng',
-    title: 'mpng — AI-powered media editing in the browser',
+    title: 'mpng - AI-powered media editing in the browser',
     description:
-      'AI-powered image and video editing platform. Background removal, filters, smart cropping, and video trimming — all in the browser.',
-    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'mpng — AI media editor' }],
+      'AI-powered image and video editing platform. Background removal, filters, smart cropping, and video trimming - all in the browser.',
+    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'mpng - AI media editor' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'mpng — AI-powered media editing in the browser',
-    description: 'Background removal, filters, smart cropping, and video trimming — all in the browser.',
+    title: 'mpng - AI-powered media editing in the browser',
+    description: 'Background removal, filters, smart cropping, and video trimming - all in the browser.',
     images: ['/og-image.png'],
     creator: '@anointedthedev',
   },
@@ -51,7 +51,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="bg-gray-950 text-white min-h-screen">{children}</body>
+      <body className="min-h-screen bg-[#060816] text-white antialiased">{children}</body>
     </html>
   )
 }

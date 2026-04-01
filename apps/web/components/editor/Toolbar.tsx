@@ -5,8 +5,8 @@ import { removeBackground } from '@/lib/api'
 
 function Section({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div>
-      <p className="text-[11px] uppercase tracking-widest text-gray-600 mb-2">{label}</p>
+    <div className="space-y-3">
+      <p className="mpng-label">{label}</p>
       {children}
     </div>
   )
@@ -23,7 +23,7 @@ function Slider({
 }) {
   return (
     <label className="flex flex-col gap-1">
-      <div className="flex justify-between text-[11px] text-gray-500">
+      <div className="flex justify-between text-xs text-white/60">
         <span className="capitalize">{label}</span>
         <span>{value}</span>
       </div>
@@ -33,7 +33,7 @@ function Slider({
         max={200}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="w-full h-1 accent-[#6C63FF] cursor-pointer"
+        className="mpng-input-range"
       />
     </label>
   )
@@ -63,12 +63,12 @@ export default function Toolbar() {
         <button
           onClick={handleRemoveBg}
           disabled={loading}
-          className="w-full py-2 px-3 rounded-lg text-sm font-semibold bg-[#6C63FF] hover:opacity-90 disabled:opacity-40 transition flex items-center justify-center gap-2"
+          className="mpng-btn-primary w-full disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loading ? (
             <>
-              <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              Processing…
+              <span className="h-3 w-3 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+              Processing...
             </>
           ) : (
             'Remove Background'
@@ -88,13 +88,13 @@ export default function Toolbar() {
         <div className="flex gap-2">
           <button
             onClick={undo}
-            className="flex-1 py-1.5 text-xs border border-gray-800 rounded-lg hover:border-gray-600 text-gray-400 hover:text-white transition"
+            className="mpng-btn-secondary flex-1"
           >
             Undo
           </button>
           <button
             onClick={reset}
-            className="flex-1 py-1.5 text-xs border border-red-900/50 rounded-lg hover:border-red-700 text-red-500 hover:text-red-400 transition"
+            className="flex-1 rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-2.5 text-sm font-semibold text-rose-200 transition hover:border-rose-400/30 hover:bg-rose-500/15"
           >
             Reset
           </button>

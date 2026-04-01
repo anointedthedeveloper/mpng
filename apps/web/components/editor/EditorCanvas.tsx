@@ -1,51 +1,15 @@
 'use client'
-import { useEffect, useRef, useState } from 'react'
-import { Stage, Layer, Image as KonvaImage } from 'react-konva'
-import { useEditorStore } from '@/store/editorStore'
+import dynamic from 'next/dynamic'
 
-function useLoadedImage(src: string) {
-  const [image, setImage] = useState<HTMLImageElement | null>(null)
-  useEffect(() => {
-    const img = new window.Image()
-    img.crossOrigin = 'anonymous'
-    img.src = src
-    img.onload = () => setImage(img)
-    return () => { img.onload = null }
-  }, [src])
-  return image
-}
-
-const CANVAS_W = 720
-const CANVAS_H = 480
+const EditorCanvasClient = dynamic(() => import('./EditorCanvasClient'), {
+  ssr: false,
+  loading: () => (
+    <div className="mpng-card checkerboard flex min-h-[480px] min-w-[720px] items-center justify-center text-sm text-white/55">
+      Loading canvas...
+    </div>
+  ),
+})
 
 export default function EditorCanvas() {
-  const { image, processedImage, filters } = useEditorStore()
-  const src = processedImage ?? image!
-  const loaded = useLoadedImage(src)
-
-  const scale = loaded
-    ? Math.min(CANVAS_W / loaded.naturalWidth, CANVAS_H / loaded.naturalHeight, 1)
-    : 1
-  const w = loaded ? loaded.naturalWidth * scale : CANVAS_W
-  const h = loaded ? loaded.naturalHeight * scale : CANVAS_H
-  const x = (CANVAS_W - w) / 2
-  const y = (CANVAS_H - h) / 2
-
-  return (
-    <div className="relative rounded-2xl overflow-hidden border border-gray-800 shadow-2xl bg-[#0d0d0d] checkerboard">
-      <Stage width={CANVAS_W} height={CANVAS_H}>
-        <Layer>
-          {loaded && (
-            <KonvaImage
-              image={loaded}
-              x={x}
-              y={y}
-              width={w}
-              height={h}
-            />
-          )}
-        </Layer>
-      </Stage>
-    </div>
-  )
+  return <EditorCanvasClient />
 }

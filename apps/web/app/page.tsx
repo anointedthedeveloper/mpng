@@ -1,128 +1,136 @@
 import Link from 'next/link'
 
-const jsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'SoftwareApplication',
-  name: 'mpng',
-  url: 'https://mpng.vercel.app',
-  description:
-    'AI-powered image and video editing platform that runs in the browser. Background removal, filters, smart cropping, and video trimming.',
-  applicationCategory: 'MultimediaApplication',
-  operatingSystem: 'Web',
-  author: {
-    '@type': 'Person',
-    name: 'Anointed the Developer',
-    url: 'https://github.com/anointedthedeveloper',
-  },
-  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
-}
-
 const features = [
   {
-    icon: '✂️',
     title: 'Background Removal',
-    desc: 'AI-powered, one click',
+    desc: 'One-click cutouts powered by your existing API flow.',
+    accent: 'from-cyan-400/30 to-indigo-500/20',
   },
   {
-    icon: '🎨',
     title: 'Canvas Editing',
-    desc: 'Filters, crop, resize',
+    desc: 'Crop, resize, and tune visuals inside a focused editor.',
+    accent: 'from-fuchsia-400/25 to-rose-500/15',
   },
   {
-    icon: '🎬',
     title: 'Video Trimming',
-    desc: 'FFmpeg-powered export',
+    desc: 'Export cleaner clips with a lightweight editing workflow.',
+    accent: 'from-amber-300/25 to-orange-500/15',
   },
+]
+
+const stats = [
+  { value: '3', label: 'core tools' },
+  { value: '1', label: 'browser workflow' },
+  { value: '0', label: 'desktop installs' },
 ]
 
 export default function Home() {
   return (
-    <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
-      <main className="flex flex-col items-center justify-center min-h-screen px-4 bg-gray-950 relative overflow-hidden">
-        {/* Background glow */}
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#6C63FF]/10 rounded-full blur-[120px] pointer-events-none" />
+    <main className="mpng-shell min-h-screen px-4 py-6 sm:px-6 lg:px-8">
+      <div className="mx-auto flex min-h-[calc(100vh-3rem)] max-w-7xl flex-col overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.03] shadow-2xl shadow-black/40">
+        <header className="flex items-center justify-between border-b border-white/10 px-5 py-4 sm:px-8">
+          <Link href="/" className="flex items-center gap-3">
+            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#6C63FF] text-sm font-bold text-white shadow-lg shadow-[#6C63FF]/30">
+              mp
+            </span>
+            <span className="text-lg font-semibold tracking-tight">
+              mp<span className="text-[#8c84ff]">ng</span>
+            </span>
+          </Link>
 
-        {/* Nav */}
-        <nav className="absolute top-0 left-0 right-0 flex items-center justify-between px-8 py-5">
-          <span className="text-xl font-bold tracking-tight">
-            mp<span className="text-[#6C63FF]">ng</span>
-          </span>
-          <a
-            href="https://github.com/anointedthedeveloper/mpng"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm text-gray-500 hover:text-white transition flex items-center gap-1.5"
-          >
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
-            </svg>
-            GitHub
-          </a>
-        </nav>
-
-        {/* Hero */}
-        <div className="text-center z-10 mt-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#6C63FF]/30 bg-[#6C63FF]/10 text-[#a09cf7] text-xs mb-6">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#6C63FF] animate-pulse" />
-            AI-powered · Open source
-          </div>
-
-          <h1 className="text-7xl font-bold tracking-tight leading-none">
-            mp<span className="text-[#6C63FF]">ng</span>
-          </h1>
-          <p className="mt-4 text-gray-400 text-lg max-w-md mx-auto leading-relaxed">
-            AI-powered media editing in the browser. Background removal, filters, and video trimming — no installs.
-          </p>
-
-          <div className="flex gap-3 mt-8 justify-center">
-            <Link
-              href="/editor"
-              className="px-6 py-3 bg-[#6C63FF] rounded-xl font-semibold text-sm hover:opacity-90 transition shadow-lg shadow-[#6C63FF]/20"
-            >
-              Open Editor
-            </Link>
+          <div className="flex items-center gap-3">
             <a
               href="https://github.com/anointedthedeveloper/mpng"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-6 py-3 border border-gray-800 rounded-xl font-semibold text-sm hover:border-gray-600 text-gray-300 transition"
+              className="mpng-btn-secondary hidden sm:inline-flex"
             >
-              View on GitHub
+              View GitHub
             </a>
+            <Link href="/editor" className="mpng-btn-primary">
+              Open Editor
+            </Link>
           </div>
-        </div>
+        </header>
 
-        {/* Feature cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-16 max-w-2xl w-full z-10">
-          {features.map((f) => (
-            <div
-              key={f.title}
-              className="bg-gray-900/60 border border-gray-800 rounded-2xl p-5 hover:border-gray-700 transition"
-            >
-              <span className="text-2xl">{f.icon}</span>
-              <h3 className="font-semibold text-white mt-3 text-sm">{f.title}</h3>
-              <p className="text-gray-500 text-xs mt-1">{f.desc}</p>
+        <section className="grid flex-1 items-center gap-12 px-5 py-14 sm:px-8 lg:grid-cols-[1.05fr_0.95fr] lg:px-10">
+          <div className="max-w-2xl">
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs text-white/70">
+              <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_18px_rgba(74,222,128,0.9)]" />
+              AI-powered media editing in the browser
             </div>
-          ))}
-        </div>
 
-        {/* Footer */}
-        <footer className="mt-16 text-gray-700 text-xs z-10">
-          Built by{' '}
-          <a
-            href="https://github.com/anointedthedeveloper"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-gray-500 hover:text-white transition"
-          >
-            anointedthedeveloper
-          </a>
-        </footer>
-      </main>
-    </>
+            <h1 className="max-w-xl text-5xl font-semibold tracking-tight text-white sm:text-6xl lg:text-7xl">
+              Edit images and clips without leaving the browser.
+            </h1>
+
+            <p className="mt-6 max-w-xl text-base leading-7 text-white/70 sm:text-lg">
+              mpng combines background removal, canvas editing, and video trimming into one
+              focused workspace built for fast, clean creation.
+            </p>
+
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link href="/editor" className="mpng-btn-primary">
+                Start editing
+              </Link>
+              <a
+                href="https://github.com/anointedthedeveloper/mpng"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mpng-btn-secondary"
+              >
+                Open source
+              </a>
+            </div>
+
+            <dl className="mt-10 grid max-w-lg grid-cols-3 gap-3">
+              {stats.map((stat) => (
+                <div key={stat.label} className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <dt className="text-2xl font-semibold text-white">{stat.value}</dt>
+                  <dd className="mt-1 text-xs uppercase tracking-[0.2em] text-white/45">{stat.label}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+
+          <div className="grid gap-4">
+            <div className="mpng-card relative overflow-hidden p-8">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(108,99,255,0.25),transparent_30%)]" />
+              <div className="relative">
+                <p className="mpng-label">Workspace preview</p>
+                <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                  {features.map((feature) => (
+                    <article
+                      key={feature.title}
+                      className={`rounded-2xl border border-white/10 bg-gradient-to-br ${feature.accent} p-5`}
+                    >
+                      <h2 className="text-lg font-semibold text-white">{feature.title}</h2>
+                      <p className="mt-2 text-sm leading-6 text-white/70">{feature.desc}</p>
+                    </article>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="mpng-card">
+                <p className="mpng-label">Fast workflow</p>
+                <p className="mt-3 text-sm leading-6 text-white/70">
+                  Upload, edit, and export with a lightweight interface that keeps attention on
+                  the media itself.
+                </p>
+              </div>
+              <div className="mpng-card">
+                <p className="mpng-label">Built for clarity</p>
+                <p className="mt-3 text-sm leading-6 text-white/70">
+                  Strong contrast, deliberate spacing, and restrained accents help every page
+                  feel polished and usable.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
   )
 }

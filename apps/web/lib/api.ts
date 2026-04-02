@@ -62,8 +62,9 @@ export async function blurBackground(originalSrc: string, blurAmount: number): P
 // Add solid or gradient color background behind subject
 export async function addColorBackground(
   originalSrc: string,
-  color: string,          // hex or 'gradient'
-  gradientTo?: string     // second color for gradient
+  color: string,
+  gradientTo?: string,
+  direction = '135deg'
 ): Promise<string> {
   return new Promise((resolve, reject) => {
     fetch(originalSrc)
@@ -75,13 +76,17 @@ export async function addColorBackground(
           const w = masked.naturalWidth
           const h = masked.naturalHeight
           const canvas = document.createElement('canvas')
-          canvas.width = w
-          canvas.height = h
+          canvas.width = w; canvas.height = h
           const ctx = canvas.getContext('2d')!
 
-          // Layer 1: color/gradient background
           if (gradientTo) {
-            const grad = ctx.createLinearGradient(0, 0, w, h)
+            // Parse direction angle to gradient coords
+            const angle = parseFloat(direction) * (Math.PI / 180)
+            const x1 = w / 2 - Math.cos(angle) * w / 2
+            const y1 = h / 2 - Math.sin(angle) * h / 2
+            const x2 = w / 2 + Math.cos(angle) * w / 2
+            const y2 = h / 2 + Math.sin(angle) * h / 2
+            const grad = ctx.createLinearGradient(x1, y1, x2, y2)
             grad.addColorStop(0, color)
             grad.addColorStop(1, gradientTo)
             ctx.fillStyle = grad
@@ -89,11 +94,9 @@ export async function addColorBackground(
             ctx.fillStyle = color
           }
           ctx.fillRect(0, 0, w, h)
-
-          // Layer 2: subject on top
           ctx.drawImage(masked, 0, 0, w, h)
 
-          canvas.toBlob((b) => {
+          canvas.toBlob(b => {
             if (!b) return reject(new Error('Color background failed'))
             resolve(URL.createObjectURL(b))
           }, 'image/png')

@@ -6,19 +6,19 @@ export default function ObjectRemoveTools() {
   const { image, processedImage, setProcessedImage } = useEditorStore()
   const activeSrc = processedImage ?? image
 
-  const canvasRef = useRef<HTMLCanvasElement>(null)       // display canvas
-  const maskCanvasRef = useRef<HTMLCanvasElement>(null)   // mask only (red overlay)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const maskCanvasRef = useRef<HTMLCanvasElement>(null)
   const imgRef = useRef<HTMLImageElement | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
   const [painting, setPainting] = useState(false)
   const [brushSize, setBrushSize] = useState(24)
   const [applying, setApplying] = useState(false)
+  const [progress, setProgress] = useState('')
   const [hasMask, setHasMask] = useState(false)
   const [cursor, setCursor] = useState<{ x: number; y: number } | null>(null)
   const [mode, setMode] = useState<'paint' | 'erase'>('paint')
 
-  // Load image
   useEffect(() => {
     if (!activeSrc) return
     const img = new window.Image()
@@ -40,12 +40,10 @@ export default function ObjectRemoveTools() {
       const mask = maskCanvasRef.current!
       mask.width = w; mask.height = h
       mask.getContext('2d')!.clearRect(0, 0, w, h)
-
       setHasMask(false)
     }
   }, [activeSrc])
 
-  // Composite: redraw image + mask overlay
   const redraw = useCallback(() => {
     const canvas = canvasRef.current
     const mask = maskCanvasRef.current
@@ -60,12 +58,9 @@ export default function ObjectRemoveTools() {
   const getCanvasPos = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current!
     const rect = canvas.getBoundingClientRect()
-    // Scale from CSS pixels to canvas pixels
-    const scaleX = canvas.width / rect.width
-    const scaleY = canvas.height / rect.height
     return {
-      x: (e.clientX - rect.left) * scaleX,
-      y: (e.clientY - rect.top) * scaleY,
+      x: (e.clientX - rect.left) * (canvas.width / rect.width),
+      y: (e.clientY - rect.top) * (canvas.height / rect.height),
     }
   }
 
@@ -82,15 +77,11 @@ export default function ObjectRemoveTools() {
 
     if (mode === 'erase') {
       ctx.globalCompositeOperation = 'destination-out'
-      ctx.beginPath()
-      ctx.arc(x, y, r, 0, Math.PI * 2)
-      ctx.fill()
+      ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill()
     } else {
       ctx.globalCompositeOperation = 'source-over'
       ctx.fillStyle = 'rgba(239,68,68,0.65)'
-      ctx.beginPath()
-      ctx.arc(x, y, r, 0, Math.PI * 2)
-      ctx.fill()
+      ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill()
       setHasMask(true)
     }
     redraw()
@@ -111,13 +102,13 @@ export default function ObjectRemoveTools() {
     const img = imgRef.current
     if (!mask || !img || !hasMask) return
     setApplying(true)
+    setProgress('Analysing background…')
 
+    // Use setTimeout to let the UI update before heavy computation
     setTimeout(() => {
-      // Work at full image resolution
       const W = img.naturalWidth, H = img.naturalHeight
-      const scaleX = W / mask.width, scaleY = H / mask.height
 
-      // Full-res canvas
+      // Full-res output canvas
       const out = document.createElement('canvas')
       out.width = W; out.height = H
       const ctx = out.getContext('2d')!
@@ -125,82 +116,129 @@ export default function ObjectRemoveTools() {
       const imgData = ctx.getImageData(0, 0, W, H)
       const px = imgData.data
 
-      // Build full-res mask by scaling up the preview mask
+      // Scale mask up to full resolution
       const maskFull = document.createElement('canvas')
       maskFull.width = W; maskFull.height = H
       maskFull.getContext('2d')!.drawImage(mask, 0, 0, W, H)
-      const maskData = maskFull.getContext('2d')!.getImageData(0, 0, W, H).data
+      const maskPx = maskFull.getContext('2d')!.getImageData(0, 0, W, H).data
 
-      // Collect masked pixel indices
-      const masked = new Uint8Array(W * H)
+      // Build boolean mask
+      const isMasked = new Uint8Array(W * H)
       for (let i = 0; i < W * H; i++) {
-        if (maskData[i * 4 + 3] > 40 && maskData[i * 4] > 80) masked[i] = 1
+        if (maskPx[i * 4 + 3] > 40 && maskPx[i * 4] > 80) isMasked[i] = 1
       }
 
-      // Multi-pass inpainting: expand from border inward
-      const passes = 4
-      for (let pass = 0; pass < passes; pass++) {
-        const updated = new Uint8Array(W * H)
-        for (let y = 1; y < H - 1; y++) {
-          for (let x = 1; x < W - 1; x++) {
-            const i = y * W + x
-            if (!masked[i]) continue
+      setProgress('Synthesising texture…')
 
-            // Sample from 8-connected neighbours that are NOT masked
-            let r = 0, g = 0, b = 0, n = 0
-            const offsets = [-W-1,-W,-W+1,-1,1,W-1,W,W+1]
-            // Also sample further out for better texture
-            const far = [-2*W,-2,-2*W-2,-2*W+2,2*W,2,2*W-2,2*W+2]
-            for (const o of [...offsets, ...far]) {
-              const ni = i + o
-              if (ni < 0 || ni >= W * H) continue
-              if (masked[ni] && !updated[ni]) continue
-              r += px[ni*4]; g += px[ni*4+1]; b += px[ni*4+2]; n++
+      // Patch-based inpainting
+      // For each masked pixel, find the best matching patch from unmasked area
+      const PATCH = 7   // patch radius — larger = better texture match, slower
+      const SEARCH = 40 // search radius for candidate patches
+
+      // Process pixels from mask boundary inward (onion-peel order)
+      // Simple approach: multiple passes, each pass fills pixels that have enough unmasked neighbours
+      const filled = new Uint8Array(W * H)
+
+      for (let pass = 0; pass < 8; pass++) {
+        for (let y = PATCH; y < H - PATCH; y++) {
+          for (let x = PATCH; x < W - PATCH; x++) {
+            const i = y * W + x
+            if (!isMasked[i] || filled[i]) continue
+
+            // Count unmasked neighbours in a small window — only fill border pixels
+            let unmaskedNeighbours = 0
+            for (let dy = -2; dy <= 2; dy++) {
+              for (let dx = -2; dx <= 2; dx++) {
+                const ni = (y + dy) * W + (x + dx)
+                if (!isMasked[ni] || filled[ni]) unmaskedNeighbours++
+              }
             }
-            if (n > 0) {
-              px[i*4] = r/n; px[i*4+1] = g/n; px[i*4+2] = b/n
-              updated[i] = 1
-              masked[i] = 0
+            if (unmaskedNeighbours < 3) continue // not on boundary yet
+
+            // Build target patch descriptor from known pixels only
+            let bestDist = Infinity
+            let bestSrcX = -1, bestSrcY = -1
+
+            // Sample candidate source patches from unmasked region around the pixel
+            const candidates = 60
+            for (let c = 0; c < candidates; c++) {
+              // Random candidate in search radius, biased toward edges of mask
+              const angle = Math.random() * Math.PI * 2
+              const dist = PATCH + Math.random() * SEARCH
+              const sx = Math.round(x + Math.cos(angle) * dist)
+              const sy = Math.round(y + Math.sin(angle) * dist)
+
+              if (sx < PATCH || sy < PATCH || sx >= W - PATCH || sy >= H - PATCH) continue
+
+              // Check candidate patch has no masked pixels
+              let hasMaskedPx = false
+              for (let dy = -PATCH; dy <= PATCH && !hasMaskedPx; dy++) {
+                for (let dx = -PATCH; dx <= PATCH && !hasMaskedPx; dx++) {
+                  const ni = (sy + dy) * W + (sx + dx)
+                  if (isMasked[ni] && !filled[ni]) hasMaskedPx = true
+                }
+              }
+              if (hasMaskedPx) continue
+
+              // Compute patch distance using only known pixels
+              let dist2 = 0, count = 0
+              for (let dy = -PATCH; dy <= PATCH; dy++) {
+                for (let dx = -PATCH; dx <= PATCH; dx++) {
+                  const ti = (y + dy) * W + (x + dx)
+                  if (isMasked[ti] && !filled[ti]) continue
+                  const si = (sy + dy) * W + (sx + dx)
+                  const dr = px[ti*4]   - px[si*4]
+                  const dg = px[ti*4+1] - px[si*4+1]
+                  const db = px[ti*4+2] - px[si*4+2]
+                  dist2 += dr*dr + dg*dg + db*db
+                  count++
+                }
+              }
+              if (count === 0) continue
+              const avgDist = dist2 / count
+              if (avgDist < bestDist) {
+                bestDist = avgDist
+                bestSrcX = sx; bestSrcY = sy
+              }
             }
+
+            if (bestSrcX < 0) continue
+
+            // Copy center pixel from best matching patch
+            const si = bestSrcY * W + bestSrcX
+            px[i*4]   = px[si*4]
+            px[i*4+1] = px[si*4+1]
+            px[i*4+2] = px[si*4+2]
+            filled[i] = 1
           }
         }
       }
 
+      // Final smooth pass — blend filled pixels with neighbours to remove seams
+      setProgress('Smoothing edges…')
+      for (let y = 1; y < H - 1; y++) {
+        for (let x = 1; x < W - 1; x++) {
+          const i = y * W + x
+          if (!filled[i]) continue
+          let r = 0, g = 0, b = 0, n = 0
+          for (let dy = -1; dy <= 1; dy++) {
+            for (let dx = -1; dx <= 1; dx++) {
+              const ni = (y+dy)*W+(x+dx)
+              r += px[ni*4]; g += px[ni*4+1]; b += px[ni*4+2]; n++
+            }
+          }
+          px[i*4] = r/n; px[i*4+1] = g/n; px[i*4+2] = b/n
+        }
+      }
+
       ctx.putImageData(imgData, 0, 0)
-
-      // Smooth the inpainted region with a slight blur pass
-      const smooth = document.createElement('canvas')
-      smooth.width = W; smooth.height = H
-      const sCtx = smooth.getContext('2d')!
-      sCtx.filter = 'blur(1.5px)'
-      sCtx.drawImage(out, 0, 0)
-      sCtx.filter = 'none'
-
-      // Blend: use smoothed version only inside mask
-      const final = document.createElement('canvas')
-      final.width = W; final.height = H
-      const fCtx = final.getContext('2d')!
-      fCtx.drawImage(out, 0, 0)
-      fCtx.globalCompositeOperation = 'destination-over'
-      fCtx.drawImage(smooth, 0, 0)
-
-      // Re-composite: original outside mask, inpainted inside
-      const result = document.createElement('canvas')
-      result.width = W; result.height = H
-      const rCtx = result.getContext('2d')!
-      rCtx.drawImage(img, 0, 0)
-      // Draw inpainted region using mask as clip
-      rCtx.save()
-      rCtx.globalCompositeOperation = 'source-over'
-      rCtx.drawImage(out, 0, 0)
-      rCtx.restore()
-
-      result.toBlob(blob => {
+      out.toBlob(blob => {
         if (blob) setProcessedImage(URL.createObjectURL(blob))
         setApplying(false)
+        setProgress('')
         clearMask()
       }, 'image/png')
-    }, 50)
+    }, 60)
   }
 
   return (
@@ -208,7 +246,7 @@ export default function ObjectRemoveTools() {
       <div>
         <p className="text-[10px] uppercase tracking-widest text-white/30">Object / Person Removal</p>
         <p className="text-[11px] text-white/40 mt-1.5 leading-relaxed">
-          Paint over what you want removed. Use Erase mode to fix the mask.
+          Paint over what you want removed. The background texture will be reconstructed.
         </p>
       </div>
 
@@ -222,39 +260,38 @@ export default function ObjectRemoveTools() {
         ))}
       </div>
 
-      {/* Canvas with brush cursor */}
+      {/* Canvas */}
       <div ref={containerRef} className="relative rounded-xl border border-white/10 overflow-hidden bg-[#0d0d1a] checkerboard">
         <canvas
           ref={canvasRef}
           className="w-full block"
           style={{ cursor: 'none' }}
-          onMouseDown={(e) => { setPainting(true); paintStroke(e) }}
+          onMouseDown={e => { setPainting(true); paintStroke(e) }}
           onMouseUp={() => setPainting(false)}
           onMouseLeave={() => { setPainting(false); setCursor(null) }}
           onMouseMove={paintStroke}
         />
-        {/* Hidden mask canvas */}
         <canvas ref={maskCanvasRef} className="hidden" />
 
-        {/* Brush cursor preview */}
-        {cursor && (
-          <div
-            className="absolute pointer-events-none rounded-full border-2 -translate-x-1/2 -translate-y-1/2 transition-none"
+        {/* Brush cursor */}
+        {cursor && !applying && (
+          <div className="absolute pointer-events-none rounded-full border-2 -translate-x-1/2 -translate-y-1/2"
             style={{
-              left: cursor.x,
-              top: cursor.y,
-              width: brushSize,
-              height: brushSize,
+              left: cursor.x, top: cursor.y,
+              width: brushSize, height: brushSize,
               borderColor: mode === 'paint' ? 'rgba(239,68,68,0.9)' : 'rgba(255,255,255,0.7)',
-              background: mode === 'paint' ? 'rgba(239,68,68,0.15)' : 'rgba(255,255,255,0.1)',
-            }}
-          />
+              background: mode === 'paint' ? 'rgba(239,68,68,0.12)' : 'rgba(255,255,255,0.08)',
+            }} />
         )}
 
-        {/* Empty state */}
-        {!activeSrc && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <p className="text-xs text-white/20">Upload an image first</p>
+        {/* Processing overlay */}
+        {applying && (
+          <div className="absolute inset-0 bg-[#0d0d1a]/80 flex flex-col items-center justify-center gap-2 backdrop-blur-sm">
+            <svg className="w-6 h-6 animate-spin text-[#6C63FF]" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+            </svg>
+            <p className="text-[11px] text-white/60">{progress}</p>
           </div>
         )}
       </div>
@@ -271,7 +308,6 @@ export default function ObjectRemoveTools() {
           style={{ background: `linear-gradient(to right, #6C63FF ${((brushSize-4)/76)*100}%, rgba(255,255,255,0.1) ${((brushSize-4)/76)*100}%)` }} />
       </label>
 
-      {/* Actions */}
       <div className="flex gap-2">
         <button onClick={clearMask} disabled={!hasMask || applying}
           className="flex-1 h-10 flex items-center justify-center gap-1.5 rounded-xl border border-white/10 text-xs text-white/50 hover:text-white hover:border-white/20 disabled:opacity-30 transition">
@@ -283,12 +319,12 @@ export default function ObjectRemoveTools() {
         <button onClick={applyRemoval} disabled={applying || !hasMask}
           className="flex-1 h-10 flex items-center justify-center gap-2 rounded-xl bg-[#6C63FF] text-xs font-semibold hover:opacity-90 disabled:opacity-40 transition shadow-lg shadow-[#6C63FF]/20">
           {applying
-            ? <><Spinner />Processing…</>
+            ? <><Spinner />Working…</>
             : <>
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
-                Apply Removal
+                Remove Object
               </>}
         </button>
       </div>
@@ -298,7 +334,9 @@ export default function ObjectRemoveTools() {
           <svg className="w-3.5 h-3.5 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          <p className="text-[10px] text-amber-400">Red area will be filled with surrounding pixels</p>
+          <p className="text-[10px] text-amber-400 leading-relaxed">
+            Larger masked areas take longer. Works best on textured/patterned backgrounds.
+          </p>
         </div>
       )}
     </div>

@@ -3,9 +3,21 @@
 @tailwind utilities;
 
 @layer base {
-  html { scroll-behavior: smooth; }
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
   body {
     @apply bg-[#060816] text-white selection:bg-[#6C63FF]/30 selection:text-white;
+  }
+  /* GPU-accelerate all transitions */
+  * {
+    will-change: auto;
+  }
+  img, video, canvas {
+    display: block;
   }
 }
 
@@ -16,8 +28,13 @@
       linear-gradient(-45deg, #121526 25%, transparent 25%),
       linear-gradient(45deg, transparent 75%, #121526 75%),
       linear-gradient(-45deg, transparent 75%, #121526 75%);
-    background-size: 20px 20px;
-    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+    background-size: 16px 16px;
+    background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+  }
+
+  .gpu {
+    transform: translateZ(0);
+    backface-visibility: hidden;
   }
 }
 
@@ -26,69 +43,15 @@
   100% { transform: translateX(100%); }
 }
 
-@layer components {
-  .mpng-shell {
-    @apply relative overflow-hidden antialiased;
-  }
-
-  .mpng-panel {
-    @apply rounded-[2.5rem] border border-white/10 bg-white/[0.02] backdrop-blur-3xl shadow-2xl shadow-black/40;
-  }
-
-  .mpng-label {
-    @apply text-[10px] font-bold uppercase tracking-[0.3em] text-white/40;
-  }
-
-  .mpng-btn-primary {
-    @apply inline-flex items-center justify-center rounded-2xl bg-[#6C63FF] text-sm font-bold text-white shadow-xl shadow-[#6C63FF]/20 transition-all duration-300 hover:-translate-y-1 hover:bg-[#7b75ff] hover:shadow-[#6C63FF]/40 active:scale-95 disabled:opacity-50 disabled:pointer-events-none;
-  }
-
-  .mpng-btn-secondary {
-    @apply inline-flex items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-sm font-bold text-white/80 transition-all duration-300 hover:border-white/20 hover:bg-white/10 hover:text-white active:scale-95;
-  }
-
-  .mpng-card {
-    @apply rounded-3xl border border-white/10 bg-white/[0.03] p-6 shadow-xl shadow-black/20 backdrop-blur-md transition-all duration-300;
-  }
-
-  .mpng-input-range {
-    @apply h-1.5 w-full cursor-pointer appearance-none rounded-full bg-white/10 accent-[#6C63FF] transition-all hover:bg-white/15;
-  }
-
-  .mpng-scrollbar::-webkit-scrollbar {
-    @apply w-1.5;
-  }
-
-  .mpng-scrollbar::-webkit-scrollbar-track {
-    @apply bg-transparent;
-  }
-
-  .mpng-scrollbar::-webkit-scrollbar-thumb {
-    @apply rounded-full bg-white/10 hover:bg-white/20;
-  }
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-@layer utilities {
-  .checkerboard {
-    background-image: 
-      linear-gradient(45deg, #121526 25%, transparent 25%), 
-      linear-gradient(-45deg, #121526 25%, transparent 25%), 
-      linear-gradient(45deg, transparent 75%, #121526 75%), 
-      linear-gradient(-45deg, transparent 75%, #121526 75%);
-    background-size: 20px 20px;
-    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
-  }
-
-  .glass-reflection {
-    @apply relative overflow-hidden;
-  }
-
-  .glass-reflection::after {
-    content: '';
-    @apply absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent opacity-0 transition-opacity duration-500 pointer-events-none;
-  }
-
-  .glass-reflection:hover::after {
-    @apply opacity-100;
-  }
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
 }
+
+.animate-fade-in  { animation: fade-in  0.2s ease both; }
+.animate-scale-in { animation: scale-in 0.15s ease both; }

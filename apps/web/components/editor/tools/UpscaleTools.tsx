@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { useEditorStore } from '@/store/editorStore'
 import { upscaleImage } from '@/lib/api'
+import { toast } from '@/components/Toast'
 
 export default function UpscaleTools() {
   const { image, processedImage, dimensions, setProcessedImage } = useEditorStore()
@@ -17,6 +18,7 @@ export default function UpscaleTools() {
     try {
       setProcessedImage(await upscaleImage(activeSrc, scale))
       if (dimensions) setDone({ from, to: `${dimensions.w * scale}×${dimensions.h * scale}` })
+      toast(`Upscaled to ${dimensions ? dimensions.w * scale : '?'}×${dimensions ? dimensions.h * scale : '?'}px`, 'success')
     } catch (e: any) { setError(e.message) }
     finally { setLoading(null) }
   }

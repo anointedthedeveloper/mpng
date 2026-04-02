@@ -2,38 +2,46 @@
 import { useState } from 'react'
 import { useEditorStore } from '@/store/editorStore'
 import { removeBackground, blurBackground } from '@/lib/api'
+import { toast } from '@/components/Toast'
 
 export default function AITools() {
   const { image, processedImage, setProcessedImage } = useEditorStore()
   const [bgLoading, setBgLoading] = useState(false)
   const [blurLoading, setBlurLoading] = useState(false)
   const [blurAmount, setBlurAmount] = useState(10)
-  const [error, setError] = useState<string | null>(null)
   const activeSrc = processedImage ?? image
   const busy = bgLoading || blurLoading
 
   const handleRemoveBg = async () => {
     if (!activeSrc) return
-    setBgLoading(true); setError(null)
+    setBgLoading(true)
     try {
       const res = await fetch(activeSrc)
       const blob = await res.blob()
       setProcessedImage(await removeBackground(new File([blob], 'image.png', { type: blob.type })))
-    } catch (e: any) { setError(e.message) }
-    finally { setBgLoading(false) }
+      toast('Background removed successfully', 'success')
+    } catch (e: any) {
+      toast(e.message ?? 'Background removal failed', 'error')
+    } finally { setBgLoading(false) }
   }
 
   const handleBlurBg = async () => {
     if (!image) return
-    setBlurLoading(true); setError(null)
-    try { setProcessedImage(await blurBackground(image, blurAmount)) }
-    catch (e: any) { setError(e.message) }
-    finally { setBlurLoading(false) }
+    setBlurLoading(true)
+    try {
+      setProcessedImage(await blurBackground(image, blurAmount))
+      toast('Background blurred', 'success')
+    } catch (e: any) {
+      toast(e.message ?? 'Blur failed', 'error')
+    } finally { setBlurLoading(false) }
   }
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-[10px] uppercase tracking-widest text-white/30">AI Tools</p>
+      <div>
+        <p className="text-[10px] uppercase tracking-widest text-white/30">AI Tools</p>
+        <p className="text-[10px] text-white/20 mt-1">Powered by remove.bg</p>
+      </div>
 
       <button onClick={handleRemoveBg} disabled={busy}
         className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-[#6C63FF] text-sm font-semibold hover:opacity-90 disabled:opacity-40 transition shadow-lg shadow-[#6C63FF]/20">
@@ -59,7 +67,6 @@ export default function AITools() {
       </div>
 
       {processedImage && <p className="text-[10px] text-white/25 text-center">← drag slider on canvas to compare</p>}
-      {error && <p className="text-[11px] text-rose-400 px-3 py-2 rounded-xl border border-rose-500/20 bg-rose-500/5">{error}</p>}
     </div>
   )
 }

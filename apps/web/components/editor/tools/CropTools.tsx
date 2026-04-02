@@ -1,45 +1,130 @@
 'use client'
-import { useRef, useState, useEffect } from 'react'
+import { useRef, useState, useEffect, useCallback } from 'react'
 import { useEditorStore } from '@/store/editorStore'
 
 const PRESETS = [
-  { label: 'Free', w: 0, h: 0 },
-  { label: '1:1', w: 1, h: 1 },
-  { label: '16:9', w: 16, h: 9 },
-  { label: '4:3', w: 4, h: 3 },
-  { label: '9:16', w: 9, h: 16 },
+  { label: 'Free', ratio: 0 },
+  { label: '1:1', ratio: 1 },
+  { label: '16:9', ratio: 16 / 9 },
+  { label: '4:3', ratio: 4 / 3 },
+  { label: '9:16', ratio: 9 / 16 },
 ]
+
+type Handle = 'tl' | 'tr' | 'bl' | 'br' | 'move' | null
+
+interface Crop { x: number; y: number; w: number; h: number }
 
 export default function CropTools() {
   const { image, processedImage, dimensions, setProcessedImage } = useEditorStore()
   const activeSrc = processedImage ?? image
+
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [crop, setCrop] = useState<Crop>({ x: 10, y: 10, w: 80, h: 80 })
   const [preset, setPreset] = useState('Free')
-  const [x, setX] = useState(10)
-  const [y, setY] = useState(10)
-  const [w, setW] = useState(80)
-  const [h, setH] = useState(80)
   const [applying, setApplying] = useState(false)
 
-  // When preset changes, lock aspect ratio
+  const dragRef = useRef<{
+    handle: Handle
+    startX: number; startY: number
+    startCrop: Crop
+  } | null>(null)
+
+  // Apply aspect ratio when preset changes
   useEffect(() => {
     const p = PRESETS.find(p => p.label === preset)
-    if (!p || p.w === 0) return
-    const ratio = p.w / p.h
-    const newH = Math.round(w / ratio)
-    if (newH + y <= 100) setH(newH)
-  }, [preset, w])
+    if (!p || p.ratio === 0) return
+    setCrop(c => {
+      const newH = Math.min(c.w / p.ratio, 100 - c.y)
+      return { ...c, h: Math.round(newH) }
+    })
+  }, [preset])
 
-  const applyCrop = async () => {
+  const getRelativePos = (e: PointerEvent) => {
+    const rect = containerRef.current!.getBoundingClientRect()
+    return {
+      px: ((e.clientX - rect.left) / rect.width) * 100,
+      py: ((e.clientY - rect.top) / rect.height) * 100,
+    }
+  }
+
+  const onPointerDown = useCallback((handle: Handle) => (e: React.PointerEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const rect = containerRef.current!.getBoundingClientRect()
+    dragRef.current = {
+      handle,
+      startX: ((e.clientX - rect.left) / rect.width) * 100,
+      startY: ((e.clientY - rect.top) / rect.height) * 100,
+      startCrop: { ...crop },
+    }
+    window.addEventListener('pointermove', onPointerMove)
+    window.addEventListener('pointerup', onPointerUp)
+  }, [crop])
+
+  const onPointerMove = useCallback((e: PointerEvent) => {
+    if (!dragRef.current || !containerRef.current) return
+    const { handle, startX, startY, startCrop } = dragRef.current
+    const { px, py } = getRelativePos(e)
+    const dx = px - startX
+    const dy = py - startY
+    const p = PRESETS.find(p => p.label === preset)
+    const ratio = p?.ratio ?? 0
+
+    setCrop(prev => {
+      let { x, y, w, h } = startCrop
+
+      if (handle === 'move') {
+        x = Math.max(0, Math.min(100 - w, x + dx))
+        y = Math.max(0, Math.min(100 - h, y + dy))
+      } else if (handle === 'br') {
+        w = Math.max(5, Math.min(100 - x, w + dx))
+        h = ratio ? w / ratio : Math.max(5, Math.min(100 - y, h + dy))
+      } else if (handle === 'bl') {
+        const newW = Math.max(5, w - dx)
+        x = Math.max(0, x + (w - newW))
+        w = newW
+        h = ratio ? w / ratio : Math.max(5, Math.min(100 - y, h + dy))
+      } else if (handle === 'tr') {
+        w = Math.max(5, Math.min(100 - x, w + dx))
+        const newH = ratio ? w / ratio : Math.max(5, h - dy)
+        y = ratio ? y : Math.max(0, y + (h - newH))
+        h = newH
+      } else if (handle === 'tl') {
+        const newW = Math.max(5, w - dx)
+        x = Math.max(0, x + (w - newW))
+        w = newW
+        const newH = ratio ? w / ratio : Math.max(5, h - dy)
+        y = ratio ? y : Math.max(0, y + (h - newH))
+        h = newH
+      }
+
+      // Clamp
+      x = Math.max(0, Math.min(100 - w, x))
+      y = Math.max(0, Math.min(100 - h, y))
+      w = Math.min(w, 100 - x)
+      h = Math.min(h, 100 - y)
+
+      return { x: Math.round(x), y: Math.round(y), w: Math.round(w), h: Math.round(h) }
+    })
+  }, [preset])
+
+  const onPointerUp = useCallback(() => {
+    dragRef.current = null
+    window.removeEventListener('pointermove', onPointerMove)
+    window.removeEventListener('pointerup', onPointerUp)
+  }, [onPointerMove])
+
+  const applyCrop = () => {
     if (!activeSrc || !dimensions) return
     setApplying(true)
     const img = new window.Image()
     img.crossOrigin = 'anonymous'
     img.src = activeSrc
     img.onload = () => {
-      const srcX = Math.round((x / 100) * img.naturalWidth)
-      const srcY = Math.round((y / 100) * img.naturalHeight)
-      const srcW = Math.round((w / 100) * img.naturalWidth)
-      const srcH = Math.round((h / 100) * img.naturalHeight)
+      const srcX = Math.round((crop.x / 100) * img.naturalWidth)
+      const srcY = Math.round((crop.y / 100) * img.naturalHeight)
+      const srcW = Math.round((crop.w / 100) * img.naturalWidth)
+      const srcH = Math.round((crop.h / 100) * img.naturalHeight)
       const canvas = document.createElement('canvas')
       canvas.width = srcW
       canvas.height = srcH
@@ -52,86 +137,109 @@ export default function CropTools() {
     }
   }
 
+  const { x, y, w, h } = crop
+
   return (
     <div className="flex flex-col gap-4">
       <p className="text-[10px] uppercase tracking-widest text-white/30">Crop</p>
 
-      {/* Aspect ratio presets */}
-      <div className="flex flex-col gap-2">
-        <p className="text-[11px] text-white/40">Aspect Ratio</p>
-        <div className="flex flex-wrap gap-1.5">
-          {PRESETS.map(p => (
-            <button key={p.label} onClick={() => setPreset(p.label)}
-              className={`px-3 py-1 rounded-lg text-xs font-semibold transition ${preset === p.label ? 'bg-[#6C63FF] text-white' : 'bg-white/5 text-white/40 hover:text-white hover:bg-white/10'}`}>
-              {p.label}
-            </button>
+      {/* Presets */}
+      <div className="flex flex-wrap gap-1.5">
+        {PRESETS.map(p => (
+          <button key={p.label} onClick={() => setPreset(p.label)}
+            className={`px-3 py-1 rounded-lg text-xs font-semibold transition ${preset === p.label ? 'bg-[#6C63FF] text-white' : 'bg-white/5 text-white/40 hover:text-white hover:bg-white/10'}`}>
+            {p.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Interactive crop canvas */}
+      <div
+        ref={containerRef}
+        className="rounded-xl border border-white/8 bg-[#0d0d1a] overflow-hidden relative select-none"
+        style={{ aspectRatio: '4/3', cursor: 'crosshair' }}
+      >
+        {/* Image preview */}
+        {activeSrc && (
+          <img src={activeSrc} className="absolute inset-0 w-full h-full object-contain" alt="" draggable={false} />
+        )}
+
+        {/* Dark mask outside crop */}
+        <div className="absolute inset-0 pointer-events-none" style={{
+          background: `linear-gradient(transparent, transparent)`,
+          boxShadow: 'none',
+        }}>
+          {/* Top */}
+          <div className="absolute bg-black/60" style={{ top: 0, left: 0, right: 0, height: `${y}%` }} />
+          {/* Bottom */}
+          <div className="absolute bg-black/60" style={{ bottom: 0, left: 0, right: 0, top: `${y + h}%` }} />
+          {/* Left */}
+          <div className="absolute bg-black/60" style={{ top: `${y}%`, left: 0, width: `${x}%`, height: `${h}%` }} />
+          {/* Right */}
+          <div className="absolute bg-black/60" style={{ top: `${y}%`, left: `${x + w}%`, right: 0, height: `${h}%` }} />
+        </div>
+
+        {/* Crop box */}
+        <div
+          className="absolute border-2 border-white cursor-move"
+          style={{ left: `${x}%`, top: `${y}%`, width: `${w}%`, height: `${h}%` }}
+          onPointerDown={onPointerDown('move')}
+        >
+          {/* Rule of thirds lines */}
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-1/3 left-0 right-0 h-px bg-white/20" />
+            <div className="absolute top-2/3 left-0 right-0 h-px bg-white/20" />
+            <div className="absolute left-1/3 top-0 bottom-0 w-px bg-white/20" />
+            <div className="absolute left-2/3 top-0 bottom-0 w-px bg-white/20" />
+          </div>
+
+          {/* Corner handles — draggable */}
+          {([
+            ['tl', 'top-0 left-0 -translate-x-1/2 -translate-y-1/2 cursor-nw-resize'],
+            ['tr', 'top-0 right-0 translate-x-1/2 -translate-y-1/2 cursor-ne-resize'],
+            ['bl', 'bottom-0 left-0 -translate-x-1/2 translate-y-1/2 cursor-sw-resize'],
+            ['br', 'bottom-0 right-0 translate-x-1/2 translate-y-1/2 cursor-se-resize'],
+          ] as [Handle, string][]).map(([handle, cls]) => (
+            <div
+              key={handle as string}
+              className={`absolute w-4 h-4 bg-white rounded-sm shadow-lg z-10 ${cls}`}
+              onPointerDown={onPointerDown(handle)}
+            />
+          ))}
+
+          {/* Edge handles */}
+          {([
+            ['t', 'top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 cursor-n-resize w-8 h-2'],
+            ['b', 'bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 cursor-s-resize w-8 h-2'],
+            ['l', 'left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 cursor-w-resize w-2 h-8'],
+            ['r', 'right-0 top-1/2 translate-x-1/2 -translate-y-1/2 cursor-e-resize w-2 h-8'],
+          ] as [string, string][]).map(([id, cls]) => (
+            <div key={id} className={`absolute bg-white/60 rounded-full z-10 ${cls}`}
+              onPointerDown={onPointerDown('move')} />
           ))}
         </div>
       </div>
 
-      {/* Visual crop preview */}
-      <div className="rounded-xl border border-white/8 bg-[#0d0d1a] overflow-hidden aspect-video relative">
-        {activeSrc && (
-          <img src={activeSrc} className="absolute inset-0 w-full h-full object-contain opacity-30" alt="" />
-        )}
-        {/* Crop overlay */}
-        <div className="absolute inset-0">
-          <div className="absolute border-2 border-[#6C63FF] rounded"
-            style={{ left: `${x}%`, top: `${y}%`, width: `${w}%`, height: `${h}%` }}>
-            {/* Corner handles */}
-            {[[-1,-1,'tl'],[-1,1,'bl'],[1,-1,'tr'],[1,1,'br']].map(([dx,dy,id]) => (
-              <div key={id as string}
-                className="absolute w-3 h-3 bg-white rounded-sm"
-                style={{
-                  [dy === -1 ? 'top' : 'bottom']: -4,
-                  [dx === -1 ? 'left' : 'right']: -4,
-                }} />
-            ))}
-            {/* Rule of thirds */}
-            <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 opacity-30">
-              {[...Array(9)].map((_, i) => <div key={i} className="border border-white/20" />)}
-            </div>
-          </div>
-          {/* Dark overlay outside crop */}
-          <div className="absolute inset-0 bg-black/50 pointer-events-none"
-            style={{ clipPath: `polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%, 0% ${y}%, ${x}% ${y}%, ${x}% ${y+h}%, ${x+w}% ${y+h}%, ${x+w}% ${y}%, 0% ${y}%)` }} />
-        </div>
-      </div>
-
-      {/* Sliders */}
-      <div className="grid grid-cols-2 gap-2">
-        {[
-          { label: 'X offset', val: x, set: setX, max: 90 },
-          { label: 'Y offset', val: y, set: setY, max: 90 },
-          { label: 'Width', val: w, set: setW, max: 100 },
-          { label: 'Height', val: h, set: setH, max: 100 },
-        ].map(({ label, val, set, max }) => (
-          <label key={label} className="flex flex-col gap-1">
-            <div className="flex justify-between text-[10px] text-white/30">
-              <span>{label}</span><span className="font-mono text-[#8c84ff]">{val}%</span>
-            </div>
-            <input type="range" min={0} max={max} value={val}
-              onChange={e => set(Number(e.target.value))}
-              className="w-full h-1 appearance-none rounded-full cursor-pointer accent-[#6C63FF]"
-              style={{ background: `linear-gradient(to right, #6C63FF ${(val/max)*100}%, rgba(255,255,255,0.1) ${(val/max)*100}%)` }} />
-          </label>
-        ))}
-      </div>
-
+      {/* Output info */}
       {dimensions && (
-        <p className="text-[10px] text-white/25 font-mono text-center">
-          Output: {Math.round((w/100)*dimensions.w)} × {Math.round((h/100)*dimensions.h)}px
-        </p>
+        <div className="flex items-center justify-between px-1">
+          <span className="text-[10px] text-white/30">Output size</span>
+          <span className="text-[10px] font-mono text-white/60">
+            {Math.round((w / 100) * dimensions.w)} × {Math.round((h / 100) * dimensions.h)}px
+          </span>
+        </div>
       )}
 
       <button onClick={applyCrop} disabled={applying || !activeSrc}
         className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-[#6C63FF] text-sm font-semibold hover:opacity-90 disabled:opacity-40 transition shadow-lg shadow-[#6C63FF]/20">
-        {applying ? <><Spinner />Cropping…</> : <>
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14" />
-          </svg>
-          Apply Crop
-        </>}
+        {applying
+          ? <><Spinner />Cropping…</>
+          : <>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 2v14a2 2 0 002 2h14M18 22V8a2 2 0 00-2-2H2" />
+              </svg>
+              Apply Crop
+            </>}
       </button>
     </div>
   )

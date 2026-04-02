@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export const runtime = 'nodejs'
 export const maxDuration = 30
+// Cache identical requests for 1 hour (same file hash = same result)
+export const revalidate = 3600
 
 export async function POST(req: NextRequest) {
   const apiKey = process.env.REMOVE_BG_API_KEY

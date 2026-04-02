@@ -10,6 +10,7 @@ import UpscaleTools from '@/components/editor/tools/UpscaleTools'
 import ColorBgTools from '@/components/editor/tools/ColorBgTools'
 import VideoTools from '@/components/editor/tools/VideoTools'
 import CropTools from '@/components/editor/tools/CropTools'
+import ObjectRemoveTools from '@/components/editor/tools/ObjectRemoveTools'
 
 const EditorCanvas = dynamic(() => import('@/components/editor/EditorCanvas'), { ssr: false })
 const VideoPlayer = dynamic(() => import('@/components/editor/VideoPlayer'), { ssr: false })
@@ -18,8 +19,9 @@ const IMAGE_TOOLS = [
   { id: 'ai', label: 'AI', icon: <SparkIcon /> },
   { id: 'adjust', label: 'Adjust', icon: <SlidersIcon /> },
   { id: 'crop', label: 'Crop', icon: <CropIcon /> },
+  { id: 'remove', label: 'Remove', icon: <EraserIcon /> },
   { id: 'upscale', label: 'Upscale', icon: <ExpandIcon /> },
-  { id: 'colorbg', label: 'Background', icon: <PaletteIcon /> },
+  { id: 'colorbg', label: 'BG', icon: <PaletteIcon /> },
 ]
 
 const VIDEO_TOOLS = [
@@ -145,6 +147,7 @@ export default function EditorPage() {
                 {mode === 'image' && activeTool === 'ai' && <AITools />}
                 {mode === 'image' && activeTool === 'adjust' && <AdjustTools />}
                 {mode === 'image' && activeTool === 'crop' && <CropTools />}
+                {mode === 'image' && activeTool === 'remove' && <ObjectRemoveTools />}
                 {mode === 'image' && activeTool === 'upscale' && <UpscaleTools />}
                 {mode === 'image' && activeTool === 'colorbg' && <ColorBgTools />}
                 {mode === 'video' && activeTool === 'video' && <VideoTools />}
@@ -163,6 +166,9 @@ export default function EditorPage() {
   )
 }
 
+function EraserIcon() {
+  return <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 10-4.243-4.243 3 3 0 004.243 4.243z" /></svg>
+}
 function CropIcon() {
   return <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 2v14a2 2 0 002 2h14M18 22V8a2 2 0 00-2-2H2" /></svg>
 }

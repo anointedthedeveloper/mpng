@@ -329,7 +329,6 @@ function PWAInstallButton() {
         if (outcome === 'accepted') {
           setInstalled(true)
           setPrompt(null)
-          toast('App installed successfully', 'success')
         } else {
           toast('Install prompt dismissed', 'info')
         }

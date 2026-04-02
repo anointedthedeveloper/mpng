@@ -1,6 +1,7 @@
 'use client'
 import { useRef, useState } from 'react'
 import { useEditorStore } from '@/store/editorStore'
+import { toast } from '@/components/Toast'
 
 export default function VideoTools() {
   const { video } = useEditorStore()
@@ -20,23 +21,28 @@ export default function VideoTools() {
   const handleExport = async () => {
     if (!video) return
     setExporting(true)
-    setProgress('Loading video…')
+    setProgress('Loading videoâ€¦')
 
     try {
-      // Use MediaRecorder to capture trimmed segment
       const videoEl = document.createElement('video')
       videoEl.src = video
       videoEl.muted = true
-      await new Promise<void>(res => { videoEl.onloadedmetadata = () => res() })
+      await new Promise<void>((res) => {
+        videoEl.onloadedmetadata = () => res()
+      })
 
       videoEl.currentTime = trimStart
-      await new Promise<void>(res => { videoEl.onseeked = () => res() })
+      await new Promise<void>((res) => {
+        videoEl.onseeked = () => res()
+      })
 
       const stream = (videoEl as any).captureStream()
       const recorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9' })
       const chunks: Blob[] = []
 
-      recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data) }
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunks.push(e.data)
+      }
 
       recorder.onstop = () => {
         const blob = new Blob(chunks, { type: 'video/webm' })
@@ -48,20 +54,20 @@ export default function VideoTools() {
         URL.revokeObjectURL(url)
         setExporting(false)
         setProgress('')
+        toast('Video trimmed and exported successfully', 'success')
       }
 
       videoEl.play()
       recorder.start()
-      setProgress(`Recording ${trimEnd - trimStart}s…`)
+      setProgress(`Recording ${trimEnd - trimStart}sâ€¦`)
 
       setTimeout(() => {
         recorder.stop()
         videoEl.pause()
       }, (trimEnd - trimStart) * 1000)
-
     } catch (e: any) {
-      // Fallback: download original
-      setProgress('Falling back to full download…')
+      setProgress('Falling back to full downloadâ€¦')
+      toast(e?.message ?? 'Trim export failed, downloading original video', 'error')
       const a = document.createElement('a')
       a.href = video
       a.download = 'mpng-video.mp4'
@@ -97,10 +103,19 @@ export default function VideoTools() {
             <span>Start</span>
             <span className="font-mono text-[#8c84ff]">{fmt(trimStart)}</span>
           </div>
-          <input type="range" min={0} max={Math.max(duration - 1, 0)} value={trimStart}
-            onChange={e => setTrimStart(Math.min(Number(e.target.value), trimEnd - 1))}
+          <input
+            type="range"
+            min={0}
+            max={Math.max(duration - 1, 0)}
+            value={trimStart}
+            onChange={(e) => setTrimStart(Math.min(Number(e.target.value), trimEnd - 1))}
             className="w-full h-1 appearance-none rounded-full cursor-pointer accent-[#6C63FF]"
-            style={{ background: `linear-gradient(to right, #6C63FF ${duration ? (trimStart/duration)*100 : 0}%, rgba(255,255,255,0.1) ${duration ? (trimStart/duration)*100 : 0}%)` }} />
+            style={{
+              background: `linear-gradient(to right, #6C63FF ${
+                duration ? (trimStart / duration) * 100 : 0
+              }%, rgba(255,255,255,0.1) ${duration ? (trimStart / duration) * 100 : 0}%)`,
+            }}
+          />
         </label>
 
         <label className="flex flex-col gap-1.5">
@@ -108,10 +123,19 @@ export default function VideoTools() {
             <span>End</span>
             <span className="font-mono text-[#8c84ff]">{fmt(trimEnd)}</span>
           </div>
-          <input type="range" min={1} max={duration || 300} value={trimEnd}
-            onChange={e => setTrimEnd(Math.max(Number(e.target.value), trimStart + 1))}
+          <input
+            type="range"
+            min={1}
+            max={duration || 300}
+            value={trimEnd}
+            onChange={(e) => setTrimEnd(Math.max(Number(e.target.value), trimStart + 1))}
             className="w-full h-1 appearance-none rounded-full cursor-pointer accent-[#6C63FF]"
-            style={{ background: `linear-gradient(to right, #6C63FF ${duration ? (trimEnd/duration)*100 : 0}%, rgba(255,255,255,0.1) ${duration ? (trimEnd/duration)*100 : 0}%)` }} />
+            style={{
+              background: `linear-gradient(to right, #6C63FF ${
+                duration ? (trimEnd / duration) * 100 : 0
+              }%, rgba(255,255,255,0.1) ${duration ? (trimEnd / duration) * 100 : 0}%)`,
+            }}
+          />
         </label>
 
         <div className="flex items-center justify-between text-[10px] px-1">
@@ -120,16 +144,21 @@ export default function VideoTools() {
         </div>
       </div>
 
-      <button onClick={handleExport} disabled={exporting || !video}
-        className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-[#6C63FF] text-sm font-semibold hover:opacity-90 disabled:opacity-40 transition shadow-lg shadow-[#6C63FF]/20">
-        {exporting
-          ? <><Spinner />{progress || 'Exporting…'}</>
-          : <>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-              </svg>
-              Export Trimmed Clip
-            </>}
+      <button
+        onClick={handleExport}
+        disabled={exporting || !video}
+        className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-[#6C63FF] text-sm font-semibold hover:opacity-90 disabled:opacity-40 transition shadow-lg shadow-[#6C63FF]/20"
+      >
+        {exporting ? (
+          <><Spinner />{progress || 'Exportingâ€¦'}</>
+        ) : (
+          <>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            Export Trimmed Clip
+          </>
+        )}
       </button>
 
       <p className="text-[10px] text-white/25 leading-relaxed px-1">

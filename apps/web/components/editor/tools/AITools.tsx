@@ -49,9 +49,9 @@ export default function AITools() {
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 10-4.243-4.243 3 3 0 004.243 4.243z" /></svg>
           Remove Background
         </>}
-      </button>
+        </button>
 
-      <div className="flex flex-col gap-2 rounded-xl border border-white/8 bg-white/[0.02] p-3">
+        <div className="flex flex-col gap-2 rounded-xl border border-white/8 bg-white/[0.02] p-3">
         <div className="flex items-center justify-between">
           <span className="text-xs text-white/50">Blur Background</span>
           <span className="text-[10px] font-mono text-[#8c84ff]">{blurAmount}px</span>
@@ -64,7 +64,17 @@ export default function AITools() {
           className="w-full h-9 flex items-center justify-center gap-2 rounded-lg border border-[#6C63FF]/30 bg-[#6C63FF]/10 text-xs font-semibold text-[#8c84ff] hover:bg-[#6C63FF]/20 disabled:opacity-40 transition">
           {blurLoading ? <><Spinner />Blurring…</> : 'Apply Blur'}
         </button>
-      </div>
+        </div>
+
+        <div className="rounded-xl border border-white/8 bg-white/[0.02] p-3">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs text-white/50">AI provider</span>
+            <span className="text-[10px] uppercase tracking-[0.25em] text-[#8c84ff]">remove.bg</span>
+          </div>
+          <p className="text-[11px] text-white/25 leading-relaxed">
+            Background removal and blur tools use remove.bg-powered image processing, while Anobyte handles the app experience.
+          </p>
+        </div>
 
       {processedImage && <p className="text-[10px] text-white/25 text-center">← drag slider on canvas to compare</p>}
     </div>

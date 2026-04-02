@@ -58,6 +58,9 @@ export default function EditorCanvasClient() {
       `saturate(${filters.saturation}%)`,
       `hue-rotate(${filters.hue}deg)`,
       filters.blur > 0 ? `blur(${filters.blur}px)` : '',
+      filters.sepia > 0 ? `sepia(${filters.sepia}%)` : '',
+      filters.grayscale > 0 ? `grayscale(${filters.grayscale}%)` : '',
+      filters.invert > 0 ? `invert(${filters.invert}%)` : '',
     ].filter(Boolean).join(' ')
     ctx.drawImage(activeImg, 0, 0)
     ctx.filter = 'none'

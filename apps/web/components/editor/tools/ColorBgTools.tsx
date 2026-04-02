@@ -2,6 +2,7 @@
 import { useState, useMemo } from 'react'
 import { useEditorStore } from '@/store/editorStore'
 import { addColorBackground } from '@/lib/api'
+import { toast } from '@/components/Toast'
 
 // Solid color swatches with names
 const SOLIDS = [
@@ -87,8 +88,14 @@ export default function ColorBgTools() {
         url = await addColorBackground(image, customFrom, customTo, customDir)
       }
       setProcessedImage(url)
-    } catch (e: any) { setError(e.message) }
-    finally { setLoading(false) }
+      toast('Background applied successfully', 'success')
+    } catch (e: any) {
+      const message = e?.message ?? 'Background apply failed'
+      setError(message)
+      toast(message, 'error')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (

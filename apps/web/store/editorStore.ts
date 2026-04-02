@@ -7,6 +7,9 @@ interface Filters {
   hue: number
   blur: number
   sharpen: number
+  sepia: number
+  grayscale: number
+  invert: number
 }
 
 interface EditorState {
@@ -31,7 +34,17 @@ interface EditorState {
   reset: () => void
 }
 
-const DEFAULT_FILTERS: Filters = { brightness: 100, contrast: 100, saturation: 100, hue: 0, blur: 0, sharpen: 0 }
+const DEFAULT_FILTERS: Filters = {
+  brightness: 100,
+  contrast: 100,
+  saturation: 100,
+  hue: 0,
+  blur: 0,
+  sharpen: 0,
+  sepia: 0,
+  grayscale: 0,
+  invert: 0,
+}
 
 export const useEditorStore = create<EditorState>((set) => ({
   mode: 'image',

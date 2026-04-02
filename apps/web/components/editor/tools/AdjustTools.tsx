@@ -27,6 +27,9 @@ export default function AdjustTools() {
       <Slider label="Saturation" value={filters.saturation} onChange={v => updateFilter('saturation', v)} />
       <Slider label="Hue Rotate" value={filters.hue} min={0} max={360} onChange={v => updateFilter('hue', v)} />
       <Slider label="Blur" value={filters.blur} min={0} max={20} onChange={v => updateFilter('blur', v)} />
+      <Slider label="Sepia" value={filters.sepia} onChange={v => updateFilter('sepia', v)} />
+      <Slider label="Grayscale" value={filters.grayscale} onChange={v => updateFilter('grayscale', v)} />
+      <Slider label="Invert" value={filters.invert} onChange={v => updateFilter('invert', v)} />
       <div className="flex gap-2 mt-2">
         <button onClick={undo} className="flex-1 h-9 flex items-center justify-center gap-1.5 rounded-xl border border-white/10 text-xs text-white/50 hover:text-white hover:border-white/20 transition">
           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>

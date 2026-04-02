@@ -1,6 +1,7 @@
 'use client'
 import { useRef, useState, useEffect, useCallback } from 'react'
 import { useEditorStore } from '@/store/editorStore'
+import { toast } from '@/components/Toast'
 
 const PRESETS = [
   { label: 'Free', ratio: 0 },
@@ -131,7 +132,12 @@ export default function CropTools() {
       const ctx = canvas.getContext('2d')!
       ctx.drawImage(img, srcX, srcY, srcW, srcH, 0, 0, srcW, srcH)
       canvas.toBlob(blob => {
-        if (blob) setProcessedImage(URL.createObjectURL(blob))
+        if (blob) {
+          setProcessedImage(URL.createObjectURL(blob))
+          toast('Crop applied successfully', 'success')
+        } else {
+          toast('Crop failed', 'error')
+        }
         setApplying(false)
       }, 'image/png')
     }

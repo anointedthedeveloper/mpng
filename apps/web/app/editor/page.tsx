@@ -11,6 +11,7 @@ import ColorBgTools from '@/components/editor/tools/ColorBgTools'
 import VideoTools from '@/components/editor/tools/VideoTools'
 import CropTools from '@/components/editor/tools/CropTools'
 import ObjectRemoveTools from '@/components/editor/tools/ObjectRemoveTools'
+import BlendTools from '@/components/editor/tools/BlendTools'
 
 const EditorCanvas = dynamic(() => import('@/components/editor/EditorCanvas'), { ssr: false })
 const VideoPlayer = dynamic(() => import('@/components/editor/VideoPlayer'), { ssr: false })
@@ -20,6 +21,7 @@ const IMAGE_TOOLS = [
   { id: 'adjust', label: 'Adjust', icon: <SlidersIcon /> },
   { id: 'crop', label: 'Crop', icon: <CropIcon /> },
   { id: 'remove', label: 'Remove', icon: <EraserIcon /> },
+  { id: 'blend', label: 'Blend', icon: <BlendIcon /> },
   { id: 'upscale', label: 'Upscale', icon: <ExpandIcon /> },
   { id: 'colorbg', label: 'BG', icon: <PaletteIcon /> },
 ]
@@ -30,7 +32,7 @@ const VIDEO_TOOLS = [
 ]
 
 export default function EditorPage() {
-  const { image, video, processedImage, mode, activeTool, setImage, setVideo, setActiveTool, reset } = useEditorStore()
+  const { image, video, processedImage, mode, activeTool, history, future, setImage, setVideo, setActiveTool, undo, redo, reset } = useEditorStore()
   const [globalDrag, setGlobalDrag] = useState(false)
   const hasMedia = image || video
 
@@ -111,6 +113,25 @@ export default function EditorPage() {
         )}
 
         <div className="ml-auto flex items-center gap-2">
+          {/* Undo / Redo */}
+          {hasMedia && (
+            <div className="flex items-center gap-1">
+              <button onClick={undo} disabled={history.length === 0}
+                title="Undo"
+                className="w-8 h-8 flex items-center justify-center rounded-lg border border-white/10 text-white/40 hover:text-white hover:border-white/20 disabled:opacity-25 disabled:cursor-not-allowed transition">
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                </svg>
+              </button>
+              <button onClick={redo} disabled={future.length === 0}
+                title="Redo"
+                className="w-8 h-8 flex items-center justify-center rounded-lg border border-white/10 text-white/40 hover:text-white hover:border-white/20 disabled:opacity-25 disabled:cursor-not-allowed transition">
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 10H11a8 8 0 00-8 8v2M21 10l-6 6m6-6l-6-6" />
+                </svg>
+              </button>
+            </div>
+          )}
           {hasMedia && (
             <button onClick={reset} className="px-3 py-1.5 rounded-lg border border-rose-500/20 text-xs text-rose-400 hover:bg-rose-500/10 transition">
               New
@@ -148,6 +169,7 @@ export default function EditorPage() {
                 {mode === 'image' && activeTool === 'adjust' && <AdjustTools />}
                 {mode === 'image' && activeTool === 'crop' && <CropTools />}
                 {mode === 'image' && activeTool === 'remove' && <ObjectRemoveTools />}
+                {mode === 'image' && activeTool === 'blend' && <BlendTools />}
                 {mode === 'image' && activeTool === 'upscale' && <UpscaleTools />}
                 {mode === 'image' && activeTool === 'colorbg' && <ColorBgTools />}
                 {mode === 'video' && activeTool === 'video' && <VideoTools />}
@@ -166,6 +188,9 @@ export default function EditorPage() {
   )
 }
 
+function BlendIcon() {
+  return <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+}
 function EraserIcon() {
   return <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 10-4.243-4.243 3 3 0 004.243 4.243z" /></svg>
 }

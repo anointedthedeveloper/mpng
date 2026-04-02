@@ -3,12 +3,24 @@ import { useState, useMemo } from 'react'
 import { useEditorStore } from '@/store/editorStore'
 import { addColorBackground } from '@/lib/api'
 
-// Solid color swatches
+// Solid color swatches with names
 const SOLIDS = [
-  '#ffffff', '#000000', '#111111', '#1a1a2e',
-  '#6C63FF', '#8b5cf6', '#a855f7', '#ec4899',
-  '#ef4444', '#f97316', '#eab308', '#84cc16',
-  '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6',
+  { name: 'White',       hex: '#ffffff' },
+  { name: 'Black',       hex: '#000000' },
+  { name: 'Charcoal',    hex: '#111111' },
+  { name: 'Navy',        hex: '#1a1a2e' },
+  { name: 'Violet',      hex: '#6C63FF' },
+  { name: 'Purple',      hex: '#8b5cf6' },
+  { name: 'Fuchsia',     hex: '#a855f7' },
+  { name: 'Pink',        hex: '#ec4899' },
+  { name: 'Red',         hex: '#ef4444' },
+  { name: 'Orange',      hex: '#f97316' },
+  { name: 'Yellow',      hex: '#eab308' },
+  { name: 'Lime',        hex: '#84cc16' },
+  { name: 'Green',       hex: '#22c55e' },
+  { name: 'Teal',        hex: '#14b8a6' },
+  { name: 'Cyan',        hex: '#06b6d4' },
+  { name: 'Blue',        hex: '#3b82f6' },
 ]
 
 // Gradient presets: [label, from, to, direction]
@@ -95,11 +107,14 @@ export default function ColorBgTools() {
 
       {/* Solid tab */}
       {tab === 'solid' && (
-        <div className="grid grid-cols-8 gap-1.5">
+        <div className="grid grid-cols-4 gap-1.5">
           {SOLIDS.map(c => (
-            <button key={c} onClick={() => setSelectedSolid(c)}
-              className={`w-full aspect-square rounded-lg border-2 transition-transform hover:scale-110 ${selectedSolid === c ? 'border-white scale-110' : 'border-transparent'}`}
-              style={{ background: c }} />
+            <button key={c.hex} onClick={() => setSelectedSolid(c.hex)}
+              title={c.name}
+              className={`h-10 rounded-xl border-2 transition-transform hover:scale-105 flex items-end p-1 ${selectedSolid === c.hex ? 'border-white scale-105' : 'border-transparent'}`}
+              style={{ background: c.hex }}>
+              <span className="text-[9px] font-semibold text-white/80 bg-black/40 px-1 py-0.5 rounded backdrop-blur-sm leading-none">{c.name}</span>
+            </button>
           ))}
         </div>
       )}

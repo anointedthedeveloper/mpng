@@ -20,7 +20,7 @@ const IMAGE_TOOLS = [
   { id: 'ai', label: 'AI', icon: <SparkIcon /> },
   { id: 'adjust', label: 'Adjust', icon: <SlidersIcon /> },
   { id: 'crop', label: 'Crop', icon: <CropIcon /> },
-  { id: 'remove', label: 'Remove', icon: <EraserIcon /> },
+  { id: 'remove', label: 'Object', icon: <EraserIcon /> },
   { id: 'blend', label: 'Blend', icon: <BlendIcon /> },
   { id: 'upscale', label: 'Upscale', icon: <ExpandIcon /> },
   { id: 'colorbg', label: 'BG', icon: <PaletteIcon /> },

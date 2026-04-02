@@ -141,3 +141,22 @@ export async function upscaleImage(src: string, scale: 2 | 4): Promise<string> {
     img.src = src
   })
 }
+
+export async function removeObject(src: string, mask: Blob): Promise<string> {
+  const imageBlob = await fetch(src).then(r => r.blob())
+  const form = new FormData()
+  form.append('file', new File([imageBlob], 'object-remove.png', { type: imageBlob.type || 'image/png' }))
+  form.append('mask', new File([mask], 'object-mask.png', { type: mask.type || 'image/png' }))
+
+  const res = await fetch('/api/remove-object', {
+    method: 'POST',
+    body: form,
+  })
+
+  if (!res.ok) {
+    const { error } = await res.json().catch(() => ({ error: 'Object removal failed' }))
+    throw new Error(error ?? 'Object removal failed')
+  }
+
+  return URL.createObjectURL(await res.blob())
+}

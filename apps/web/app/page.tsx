@@ -18,9 +18,73 @@ const jsonLd = {
 }
 
 const features = [
-  { icon: '✂️', title: 'Background Removal', desc: 'One-click AI cutouts via rembg', color: 'border-cyan-500/20 hover:border-cyan-500/40' },
-  { icon: '🎨', title: 'Canvas Editing', desc: 'Filters, crop, resize with Konva.js', color: 'border-fuchsia-500/20 hover:border-fuchsia-500/40' },
-  { icon: '🎬', title: 'Video Trimming', desc: 'FFmpeg-powered clip export', color: 'border-amber-500/20 hover:border-amber-500/40' },
+  {
+    title: 'Background Removal',
+    desc: 'One-click AI cutouts via remove.bg',
+    color: 'border-cyan-500/20 hover:border-cyan-500/40',
+    iconColor: 'text-cyan-400 bg-cyan-500/10',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 10-4.243-4.243 3 3 0 004.243 4.243z" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Canvas Editing',
+    desc: 'Filters, brightness, contrast, saturation',
+    color: 'border-fuchsia-500/20 hover:border-fuchsia-500/40',
+    iconColor: 'text-fuchsia-400 bg-fuchsia-500/10',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 3v1m0 16v1m8.66-13l-.87.5M4.21 17.5l-.87.5M19.79 17.5l-.87-.5M4.21 6.5l-.87-.5M21 12h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Upscale & Export',
+    desc: '2× / 4× upscaling, download as PNG',
+    color: 'border-amber-500/20 hover:border-amber-500/40',
+    iconColor: 'text-amber-400 bg-amber-500/10',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Blur Background',
+    desc: 'Portrait-style bokeh effect, adjustable',
+    color: 'border-blue-500/20 hover:border-blue-500/40',
+    iconColor: 'text-blue-400 bg-blue-500/10',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="3" strokeWidth="1.5"/>
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+      </svg>
+    ),
+  },
+  {
+    title: 'Color Background',
+    desc: 'Solid colors or gradients behind subject',
+    color: 'border-pink-500/20 hover:border-pink-500/40',
+    iconColor: 'text-pink-400 bg-pink-500/10',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Paste & Drop',
+    desc: 'Ctrl+V or drop anywhere to upload',
+    color: 'border-emerald-500/20 hover:border-emerald-500/40',
+    iconColor: 'text-emerald-400 bg-emerald-500/10',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+      </svg>
+    ),
+  },
 ]
 
 export default function Home() {
@@ -113,13 +177,15 @@ export default function Home() {
 
         {/* Features */}
         <section className="px-8 pb-20">
-          <div className="max-w-3xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {features.map((f) => (
               <div
                 key={f.title}
                 className={`rounded-2xl border bg-white/[0.02] p-6 transition-colors ${f.color}`}
               >
-                <span className="text-2xl">{f.icon}</span>
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${f.iconColor}`}>
+                  {f.icon}
+                </div>
                 <h2 className="font-semibold text-white mt-4 text-sm">{f.title}</h2>
                 <p className="text-white/40 text-xs mt-1 leading-relaxed">{f.desc}</p>
               </div>

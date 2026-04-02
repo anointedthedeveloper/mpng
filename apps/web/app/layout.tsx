@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next'
+import type { ReactNode } from 'react'
 import './globals.css'
 import PageLoader from '@/components/PageLoader'
 import ServiceWorkerRegistrar from '@/components/ServiceWorkerRegistrar'
@@ -14,20 +15,55 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
+  applicationName: 'mpng',
+  generator: 'Next.js',
+  referrer: 'origin-when-cross-origin',
   title: {
-    default: 'mpng — Free AI Image & Video Editor Online',
+    default: 'mpng - Free AI Image & Video Editor Online',
     template: '%s | mpng',
   },
   description:
-    'mpng by Anobyte — free AI-powered image and video editor. Background removal, photo editing, picture editing, blur background, color background, upscale images, video trimming — all in the browser. No installs. Powered by remove.bg AI.',
+    'mpng by Anobyte is a free AI-powered browser image editor and video editor. Edit PNGs, remove backgrounds, blur background, change background color, upscale images, trim videos, and export instantly with no install editor required.',
   keywords: [
-    'background removal', 'remove background', 'AI image editor', 'photo editor online',
-    'picture editor', 'edit image online', 'edit photo online', 'edit picture online',
-    'video editor online', 'video editing', 'image upscaler', 'blur background',
-    'color background', 'PNG editor', 'MP4 editor', 'free photo editor',
-    'mpng', 'anointedthedeveloper', 'Anointed the Developer',
-    'Anobyte', 'anobyte', 'browser image editor', 'no install editor',
-    'remove.bg', 'AI background remover', 'object removal', 'image blend',
+    'background removal',
+    'remove background',
+    'AI image editor',
+    'photo editor online',
+    'picture editor',
+    'edit image online',
+    'edit photo online',
+    'edit picture online',
+    'video editor online',
+    'video editing',
+    'image upscaler',
+    'blur background',
+    'color background',
+    'PNG editor',
+    'PNG editor online',
+    'free photo editor',
+    'free image editor',
+    'browser image editor',
+    'browser based editor',
+    'online image editor',
+    'online video editor',
+    'no install editor',
+    'remove.bg',
+    'AI background remover',
+    'object removal',
+    'image blend',
+    'crop image online',
+    'resize image online',
+    'download PNG',
+    'edit PNG without install',
+    'edit MP4 online',
+    'trim video online',
+    'photo background changer',
+    'transparent background maker',
+    'mpng',
+    'anointedthedeveloper',
+    'Anointed the Developer',
+    'Anobyte',
+    'anobyte',
   ],
   authors: [
     { name: 'Anointed the Developer', url: 'https://github.com/anointedthedeveloper' },
@@ -36,22 +72,46 @@ export const metadata: Metadata = {
   creator: 'anointedthedeveloper',
   publisher: 'Anobyte',
   category: 'Photo & Video',
+  classification: 'Media editing software',
+  formatDetection: {
+    address: false,
+    email: false,
+    telephone: false,
+  },
+  appleWebApp: {
+    capable: true,
+    title: 'mpng',
+    statusBarStyle: 'black-translucent',
+  },
   openGraph: {
     type: 'website',
     url: BASE_URL,
     siteName: 'mpng by Anobyte',
-    title: 'mpng — Free AI Image & Video Editor Online',
-    description: 'Remove backgrounds, edit photos, trim videos, upscale images — all free in your browser. Powered by Anobyte.',
-    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'mpng AI media editor by Anobyte' }],
+    title: 'mpng - Free AI Image & Video Editor Online',
+    description:
+      'Remove backgrounds, edit PNGs, trim videos, upscale images, and change backgrounds right in the browser with no install editor required.',
+    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'mpng AI media editor by Anobyte' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'mpng — Free AI Image & Video Editor Online',
-    description: 'Remove backgrounds, edit photos, trim videos, upscale images — all free in your browser. By Anobyte.',
-    images: ['/og-image.png'],
+    title: 'mpng - Free AI Image & Video Editor Online',
+    description:
+      'Remove backgrounds, edit PNGs, trim videos, upscale images, and more in the browser. No install editor required.',
+    images: ['/opengraph-image'],
     creator: '@anointedthedev',
   },
-  robots: { index: true, follow: true, googleBot: { index: true, follow: true, 'max-image-preview': 'large' } },
+  robots: {
+    index: true,
+    follow: true,
+    nocache: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+      'max-video-preview': -1,
+    },
+  },
   alternates: { canonical: BASE_URL },
   manifest: '/manifest.json',
   icons: {
@@ -60,7 +120,7 @@ export const metadata: Metadata = {
   },
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <body className="min-h-screen bg-[#060816] text-white antialiased">

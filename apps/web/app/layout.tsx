@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import PageLoader from '@/components/PageLoader'
+import ServiceWorkerRegistrar from '@/components/ServiceWorkerRegistrar'
 
 const BASE_URL = 'https://mpng.vercel.app'
 
@@ -63,6 +64,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body className="min-h-screen bg-[#060816] text-white antialiased">
         <PageLoader />
+        <ServiceWorkerRegistrar />
         {children}
       </body>
     </html>

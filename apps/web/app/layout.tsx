@@ -74,20 +74,10 @@ export const metadata: Metadata = {
   category: 'Photo & Video',
   classification: 'Media editing software',
   other: {
-    'application-name': 'mpng by Anobyte',
-    'apple-mobile-web-app-title': 'mpng by Anobyte',
+    'mobile-web-app-capable': 'yes',
     'brand': 'Anobyte',
   },
-  formatDetection: {
-    address: false,
-    email: false,
-    telephone: false,
-  },
-  appleWebApp: {
-    capable: true,
-    title: 'mpng',
-    statusBarStyle: 'black-translucent',
-  },
+  formatDetection: { address: false, email: false, telephone: false },
   openGraph: {
     type: 'website',
     url: BASE_URL,
@@ -128,6 +118,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
+      <head>
+        <meta name="mobile-web-app-capable" content="yes" />
+      </head>
       <body className="min-h-screen bg-[#060816] text-white antialiased">
         <PageLoader />
         <ServiceWorkerRegistrar />

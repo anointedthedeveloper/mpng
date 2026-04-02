@@ -112,33 +112,30 @@ export async function upscaleImage(src: string, scale: 2 | 4): Promise<string> {
   return new Promise((resolve, reject) => {
     const img = new window.Image()
     img.onload = () => {
-      const steps = scale === 4 ? 2 : 1
-      let currentCanvas = document.createElement('canvas')
-      let currentCtx = currentCanvas.getContext('2d')!
-      currentCanvas.width = img.naturalWidth
-      currentCanvas.height = img.naturalHeight
-      currentCtx.drawImage(img, 0, 0)
+      // Draw original to canvas to get pixels
+      const canvas = document.createElement('canvas')
+      canvas.width = img.naturalWidth; canvas.height = img.naturalHeight
+      const ctx = canvas.getContext('2d')!
+      ctx.drawImage(img, 0, 0)
+      const { data } = ctx.getImageData(0, 0, img.naturalWidth, img.naturalHeight)
 
-      for (let i = 0; i < steps; i++) {
-        const nextCanvas = document.createElement('canvas')
-        nextCanvas.width = currentCanvas.width * 2
-        nextCanvas.height = currentCanvas.height * 2
-        const nextCtx = nextCanvas.getContext('2d')!
-        nextCtx.imageSmoothingEnabled = true
-        nextCtx.imageSmoothingQuality = 'high'
-        nextCtx.drawImage(currentCanvas, 0, 0, nextCanvas.width, nextCanvas.height)
-        nextCtx.globalCompositeOperation = 'overlay'
-        nextCtx.globalAlpha = 0.25
-        nextCtx.drawImage(nextCanvas, 0, 0)
-        nextCtx.globalCompositeOperation = 'source-over'
-        nextCtx.globalAlpha = 1
-        currentCanvas = nextCanvas
+      // Send to worker — zero-copy transfer
+      const worker = new Worker('/upscale.worker.js')
+      const buf = new Uint8ClampedArray(data).buffer
+      worker.postMessage({ pixels: buf, w: img.naturalWidth, h: img.naturalHeight, scale }, [buf])
+
+      worker.onmessage = (e) => {
+        const { pixels, w, h } = e.data
+        const out = document.createElement('canvas')
+        out.width = w; out.height = h
+        out.getContext('2d')!.putImageData(new ImageData(new Uint8ClampedArray(pixels), w, h), 0, 0)
+        out.toBlob(blob => {
+          if (!blob) return reject(new Error('Upscale failed'))
+          resolve(URL.createObjectURL(blob))
+          worker.terminate()
+        }, 'image/png')
       }
-
-      currentCanvas.toBlob((blob) => {
-        if (!blob) return reject(new Error('Upscale failed'))
-        resolve(URL.createObjectURL(blob))
-      }, 'image/png')
+      worker.onerror = (err) => { reject(err); worker.terminate() }
     }
     img.onerror = () => reject(new Error('Failed to load image'))
     img.src = src

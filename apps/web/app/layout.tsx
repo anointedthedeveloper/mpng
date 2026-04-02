@@ -73,6 +73,11 @@ export const metadata: Metadata = {
   publisher: 'Anobyte',
   category: 'Photo & Video',
   classification: 'Media editing software',
+  other: {
+    'application-name': 'mpng by Anobyte',
+    'apple-mobile-web-app-title': 'mpng by Anobyte',
+    'brand': 'Anobyte',
+  },
   formatDetection: {
     address: false,
     email: false,

@@ -2,6 +2,7 @@
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { useEffect, useState } from 'react'
+import { toast } from '@/components/Toast'
 
 const jsonLd = {
   '@context': 'https://schema.org',
@@ -298,20 +299,15 @@ function PWAInstallButton() {
       setPrompt(e)
     }
     window.addEventListener('beforeinstallprompt', handler)
-    window.addEventListener('appinstalled', () => setInstalled(true))
+    window.addEventListener('appinstalled', () => {
+      setInstalled(true)
+      setPrompt(null)
+      toast('App installed successfully', 'success')
+    })
     return () => window.removeEventListener('beforeinstallprompt', handler)
   }, [])
 
-  if (installed) {
-    return (
-      <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-400">
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-        </svg>
-        Installed
-      </div>
-    )
-  }
+  if (installed) return null
 
   if (!prompt) return null
 
@@ -320,7 +316,13 @@ function PWAInstallButton() {
       onClick={async () => {
         prompt.prompt()
         const { outcome } = await prompt.userChoice
-        if (outcome === 'accepted') setInstalled(true)
+        if (outcome === 'accepted') {
+          setInstalled(true)
+          setPrompt(null)
+          toast('App installed successfully', 'success')
+        } else {
+          toast('Install prompt dismissed', 'info')
+        }
       }}
       className="flex items-center gap-2 px-4 py-2 rounded-lg border border-[#6C63FF]/40 bg-[#6C63FF]/10 text-xs font-semibold text-[#8c84ff] hover:bg-[#6C63FF]/20 transition"
     >
@@ -437,7 +439,7 @@ export default function Home() {
 
               <div className="mt-10 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-center sm:gap-6">
                 {[
-                  ['20+', 'tools'],
+                  ['24+', 'tools'],
                   ['0', 'cost'],
                   ['100%', 'browser'],
                   ['PNG', 'friendly'],
@@ -576,6 +578,8 @@ export default function Home() {
               <span className="text-[#6C63FF] font-semibold">ng</span>
               <span className="text-white/20">-</span>
               <span>AI-powered browser image editor</span>
+              <span className="text-white/20">-</span>
+              <span>Powered by Anobyte</span>
             </div>
             <div className="flex items-center gap-4">
               <a href="https://github.com/anointedthedeveloper/mpng" target="_blank" rel="noopener noreferrer" className="hover:text-white transition">

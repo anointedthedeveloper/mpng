@@ -1,6 +1,7 @@
 'use client'
 import { useRef, useState, useEffect, useCallback } from 'react'
 import { useEditorStore } from '@/store/editorStore'
+import { toast } from '@/components/Toast'
 
 export default function ObjectRemoveTools() {
   const { image, processedImage, setProcessedImage } = useEditorStore()
@@ -186,7 +187,12 @@ export default function ObjectRemoveTools() {
           setProgressPct(100)
 
           out.toBlob(blob => {
-            if (blob) setProcessedImage(URL.createObjectURL(blob))
+            if (blob) {
+              setProcessedImage(URL.createObjectURL(blob))
+              toast('Object removed successfully', 'success')
+            } else {
+              toast('Object removal failed', 'error')
+            }
             setApplying(false); setProgress(''); setProgressPct(0)
             clearMask()
             worker.terminate()
@@ -198,6 +204,7 @@ export default function ObjectRemoveTools() {
     worker.onerror = (err) => {
       console.error('Worker error:', err)
       setApplying(false); setProgress('')
+      toast('Object removal failed', 'error')
       worker.terminate()
     }
 

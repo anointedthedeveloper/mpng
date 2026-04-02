@@ -298,13 +298,17 @@ function PWAInstallButton() {
       e.preventDefault()
       setPrompt(e)
     }
-    window.addEventListener('beforeinstallprompt', handler)
-    window.addEventListener('appinstalled', () => {
+    const installedHandler = () => {
       setInstalled(true)
       setPrompt(null)
       toast('App installed successfully', 'success')
-    })
-    return () => window.removeEventListener('beforeinstallprompt', handler)
+    }
+    window.addEventListener('beforeinstallprompt', handler)
+    window.addEventListener('appinstalled', installedHandler)
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handler)
+      window.removeEventListener('appinstalled', installedHandler)
+    }
   }, [])
 
   if (installed) return null

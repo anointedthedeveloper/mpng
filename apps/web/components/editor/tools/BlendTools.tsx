@@ -156,6 +156,7 @@ export default function BlendTools() {
               e.stopPropagation()
               setDragging(true)
             }}
+            onClick={(e) => e.stopPropagation()}
           >
             <img src={blendSrc} className="w-full h-full object-cover opacity-90" alt="overlay" draggable={false} />
           </div>

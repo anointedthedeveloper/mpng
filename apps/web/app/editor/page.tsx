@@ -9,6 +9,7 @@ import AdjustTools from '@/components/editor/tools/AdjustTools'
 import UpscaleTools from '@/components/editor/tools/UpscaleTools'
 import ColorBgTools from '@/components/editor/tools/ColorBgTools'
 import VideoTools from '@/components/editor/tools/VideoTools'
+import CropTools from '@/components/editor/tools/CropTools'
 
 const EditorCanvas = dynamic(() => import('@/components/editor/EditorCanvas'), { ssr: false })
 const VideoPlayer = dynamic(() => import('@/components/editor/VideoPlayer'), { ssr: false })
@@ -16,12 +17,14 @@ const VideoPlayer = dynamic(() => import('@/components/editor/VideoPlayer'), { s
 const IMAGE_TOOLS = [
   { id: 'ai', label: 'AI', icon: <SparkIcon /> },
   { id: 'adjust', label: 'Adjust', icon: <SlidersIcon /> },
+  { id: 'crop', label: 'Crop', icon: <CropIcon /> },
   { id: 'upscale', label: 'Upscale', icon: <ExpandIcon /> },
   { id: 'colorbg', label: 'Background', icon: <PaletteIcon /> },
 ]
 
 const VIDEO_TOOLS = [
-  { id: 'video', label: 'Video', icon: <VideoIcon /> },
+  { id: 'video', label: 'Trim', icon: <VideoIcon /> },
+  { id: 'crop', label: 'Crop', icon: <CropIcon /> },
 ]
 
 export default function EditorPage() {
@@ -141,9 +144,11 @@ export default function EditorPage() {
               <div className="flex-1 overflow-y-auto p-4">
                 {mode === 'image' && activeTool === 'ai' && <AITools />}
                 {mode === 'image' && activeTool === 'adjust' && <AdjustTools />}
+                {mode === 'image' && activeTool === 'crop' && <CropTools />}
                 {mode === 'image' && activeTool === 'upscale' && <UpscaleTools />}
                 {mode === 'image' && activeTool === 'colorbg' && <ColorBgTools />}
-                {mode === 'video' && <VideoTools />}
+                {mode === 'video' && activeTool === 'video' && <VideoTools />}
+                {mode === 'video' && activeTool === 'crop' && <CropTools />}
               </div>
             </aside>
 
@@ -158,6 +163,9 @@ export default function EditorPage() {
   )
 }
 
+function CropIcon() {
+  return <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 2v14a2 2 0 002 2h14M18 22V8a2 2 0 00-2-2H2" /></svg>
+}
 function SparkIcon() {
   return <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3l14 9-14 9V3z" /></svg>
 }

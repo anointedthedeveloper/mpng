@@ -73,10 +73,7 @@ export const metadata: Metadata = {
   publisher: 'Anobyte',
   category: 'Photo & Video',
   classification: 'Media editing software',
-  other: {
-    'mobile-web-app-capable': 'yes',
-    'brand': 'Anobyte',
-  },
+  other: { brand: 'Anobyte' },
   formatDetection: { address: false, email: false, telephone: false },
   openGraph: {
     type: 'website',

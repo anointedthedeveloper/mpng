@@ -16,6 +16,12 @@ export async function POST(req: NextRequest) {
   if (!file) {
     return NextResponse.json({ error: 'No file provided' }, { status: 400 })
   }
+  if (!file.type.startsWith('image/')) {
+    return NextResponse.json({ error: 'Please upload a PNG, JPG, or WEBP image.' }, { status: 400 })
+  }
+  if (file.size > 10 * 1024 * 1024) {
+    return NextResponse.json({ error: 'Please use an image smaller than 10MB.' }, { status: 400 })
+  }
 
   const outForm = new FormData()
   outForm.append('image_file', file)
@@ -29,7 +35,13 @@ export async function POST(req: NextRequest) {
 
   if (!res.ok) {
     const text = await res.text()
-    return NextResponse.json({ error: text }, { status: res.status })
+    const readable =
+      res.status === 400
+        ? 'Remove.bg could not process this file. Try a PNG or JPG under 10MB.'
+        : res.status === 402
+          ? 'Remove.bg credits are exhausted or unavailable right now.'
+          : text || 'Background removal failed'
+    return NextResponse.json({ error: readable }, { status: res.status })
   }
 
   const buffer = await res.arrayBuffer()

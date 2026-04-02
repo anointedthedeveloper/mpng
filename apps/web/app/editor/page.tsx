@@ -141,8 +141,8 @@ export default function EditorPage() {
           </div>
         ) : (
           <>
-            {/* Left tool panel */}
-            <aside className="w-72 shrink-0 border-r border-white/8 bg-[#0a0a14] flex flex-col overflow-hidden">
+            {/* Left tool panel — narrow so canvas gets maximum space */}
+            <aside className="w-64 shrink-0 border-r border-white/8 bg-[#0a0a14] flex flex-col overflow-hidden">
               <div className="flex-1 overflow-y-auto p-4">
                 {mode === 'image' && activeTool === 'ai' && <AITools />}
                 {mode === 'image' && activeTool === 'adjust' && <AdjustTools />}
@@ -155,8 +155,8 @@ export default function EditorPage() {
               </div>
             </aside>
 
-            {/* Canvas */}
-            <main className="flex-1 flex items-center justify-center bg-[#060810] overflow-hidden p-6">
+            {/* Canvas — fills ALL remaining space */}
+            <main className="flex-1 min-w-0 bg-[#060810] overflow-hidden">
               {mode === 'image' ? <EditorCanvas /> : <VideoPlayer />}
             </main>
           </>

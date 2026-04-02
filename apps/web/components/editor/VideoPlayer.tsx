@@ -28,12 +28,12 @@ export default function VideoPlayer() {
   if (!video) return null
 
   return (
-    <div className="flex flex-col items-center gap-3 w-full max-w-3xl">
+    <div className="flex flex-col items-center gap-3 w-full h-full p-4">
       <video
         ref={videoRef}
         src={video}
-        className="w-full rounded-2xl border border-white/10 shadow-2xl shadow-black/40 bg-black"
-        style={{ maxHeight: '55vh' }}
+        className="w-full rounded-2xl border border-white/10 shadow-2xl shadow-black/40 bg-black flex-1 min-h-0"
+        style={{ maxHeight: 'calc(100% - 80px)', objectFit: 'contain' }}
         onLoadedMetadata={e => { setDuration((e.target as HTMLVideoElement).duration) }}
         onTimeUpdate={e => setCurrentTime((e.target as HTMLVideoElement).currentTime)}
         onEnded={() => setPlaying(false)}
